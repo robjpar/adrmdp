@@ -29,6 +29,8 @@ class ADRMDP(object):
             Real time requested (s) (default 4.5)
         n_t_steps: int
             Number of time steps (default 500)
+        interf_slope: float
+            Slope of the interface sigmoid (1/nm) (default 20)
         samp_d_slope: float
             Slope of the sampling depth sigmoid (1/nm) (default 1.7)
         samp_d_infl: float
@@ -94,6 +96,8 @@ class ADRMDP(object):
         time = kwargs.get('time', 4.5)  # (s)
         n_t_steps = kwargs.get('n_t_steps', 500)
 
+        interf_slope = kwargs.get('interf_slope', 20)  # (1/nm)
+
         samp_d_slope = kwargs.get('samp_d_slope', 1.7)  # (1/nm)
         samp_d_infl = kwargs.get('samp_d_infl', 2.2)  # (nm)
 
@@ -131,6 +135,8 @@ class ADRMDP(object):
 
         T = time  # (s)
         self._N = n_t_steps  # dt = T/N
+
+        self._interf_slope = interf_slope/(1/self._samp_len)  # (1)
 
         samp_d_slope = samp_d_slope/(1/self._samp_len)  # (1)
         samp_d_infl = samp_d_infl/self._samp_len  # (1)
@@ -210,34 +216,61 @@ class ADRMDP(object):
     # =========================================================================
 
     def _get_ini_cond(self):
-        u1_index = (self._l_depth_u/self._dx).astype(int)
-        u2_index = ((self._l_depth_u + self._l_width_u)/self._dx).astype(int)
-        v1_index = (self._l_depth_v/self._dx).astype(int)
-        v2_index = ((self._l_depth_v + self._l_width_v)/self._dx).astype(int)
-
         U = np.zeros(self._J)
-        for u1, u2 in zip(u1_index, u2_index):
-            if u1 < 0:
-                u1 = 0
-            if u2 < 0:
-                u2 = 0
-            if u1 > self._J:
-                u1 = self._J
-            if u2 > self._J:
-                u2 = self._J
-            U[u1: u2] = 1
+        for x1, x2 in zip(self._l_depth_u, self._l_depth_u + self._l_width_u):
+            x_one_fourth = (x2 - x1)/4
+            j1 = int((x1 - x_one_fourth)/self._dx)
+            j2 = int((x1 + 2 * x_one_fourth)/self._dx)
+            j3 = int((x2 - 2 * x_one_fourth)/self._dx)
+            j4 = int((x2 + x_one_fourth)/self._dx)
+            if j1 < 0:
+                j1 = 0
+            if j2 < 0:
+                j2 = 0
+            if j1 > self._J:
+                j1 = self._J
+            if j2 > self._J:
+                j2 = self._J
+            if j3 < 0:
+                j3 = 0
+            if j4 < 0:
+                j4 = 0
+            if j3 > self._J:
+                j3 = self._J
+            if j4 > self._J:
+                j4 = self._J
+            U[j1: j2] = (-self._get_sigm_fun(x1,
+                                             self._interf_slope) + 1)[j1: j2]
+            U[j3 - 1: j4] = self._get_sigm_fun(x2,
+                                               self._interf_slope)[j3 - 1: j4]
 
         V = np.zeros(self._J)
-        for v1, v2 in zip(v1_index, v2_index):
-            if v1 < 0:
-                v1 = 0
-            if v2 < 0:
-                v2 = 0
-            if v1 > self._J:
-                v1 = self._J
-            if v2 > self._J:
-                v2 = self._J
-            V[v1: v2] = 1
+        for x1, x2 in zip(self._l_depth_v, self._l_depth_v + self._l_width_v):
+            x_one_fourth = (x2 - x1)/4
+            j1 = int((x1 - x_one_fourth)/self._dx)
+            j2 = int((x1 + 2 * x_one_fourth)/self._dx)
+            j3 = int((x2 - 2 * x_one_fourth)/self._dx)
+            j4 = int((x2 + x_one_fourth)/self._dx)
+            if j1 < 0:
+                j1 = 0
+            if j2 < 0:
+                j2 = 0
+            if j1 > self._J:
+                j1 = self._J
+            if j2 > self._J:
+                j2 = self._J
+            if j3 < 0:
+                j3 = 0
+            if j4 < 0:
+                j4 = 0
+            if j3 > self._J:
+                j3 = self._J
+            if j4 > self._J:
+                j4 = self._J
+            V[j1: j2] = (-self._get_sigm_fun(x1,
+                                             self._interf_slope) + 1)[j1: j2]
+            V[j3 - 1: j4] = self._get_sigm_fun(x2,
+                                               self._interf_slope)[j3 - 1: j4]
 
         return U, V
     # =========================================================================
