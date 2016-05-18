@@ -354,9 +354,9 @@ class ADRMDP(object):
 
         U, V = self._get_ini_cond()
 
-        self._U_xt = np.zeros((self._J, self._N))
-        self._V_xt = np.zeros((self._J, self._N))
-        self._M_xt = np.zeros((self._J, self._N))
+        self._U_xt = np.zeros((self._N, self._J))
+        self._V_xt = np.zeros((self._N, self._J))
+        self._M_xt = np.zeros((self._N, self._J))
         self._a_t = np.zeros(self._N)
         # a record of temporary a's needed to convert t to x
 
