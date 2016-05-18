@@ -42,16 +42,17 @@ class ADRMDP(object):
         vel_u: float
             Velocity for component u (nm/s) (default 9)
         diff_ampl_u: float
-            Magnitude of the diffusivity sigmoid for comp u (nm^2/s)
+            Magnitude of the diffusivity sigmoid for component u (nm^2/s)
             (default 18)
         diff_slope_u: float
-            Slope of the diffusivity sigmoid for comp u (1/nm) (default 0.7)
+            Slope of the diffusivity sigmoid for component u (1/nm)
+            (default 0.7)
         diff_x_infl_u: float
-            Inflection point of the diffusivity sigmoid for comp u (nm)
+            Inflection point of the diffusivity sigmoid for component u (nm)
             (default 3.5)
         diff_const_u: float
-            Constant component of the total diffusivity for comp u (nm^2/s)
-            (default 0.08)
+            Constant component of the total diffusivity for component u
+            (nm^2/s) (default 0.08)
         l_depth_v: list of floats
             Layers of component v (nm) (default [])
         l_width_v: list of floats
@@ -59,23 +60,23 @@ class ADRMDP(object):
         vel_v: float
             Velocity for component v (nm/s) (default vel_u)
         diff_ampl_v: float
-            Magnitude of the diffusivity sigmoid for comp v (nm^2/s)
+            Magnitude of the diffusivity sigmoid for component v (nm^2/s)
             (default diff_ampl_u)
         diff_slope_v: float
-            Slope of the diffusivity sigmoid for comp v (1/nm)
+            Slope of the diffusivity sigmoid for component v (1/nm)
             (default diff_slope_u)
         diff_x_infl_v: float
-            Inflection point of the diffusivity sigmoid for comp v (nm)
+            Inflection point of the diffusivity sigmoid for component v (nm)
             (default diff_x_infl_u)
         diff_const_v: float
-            Constant component of the total diffusivity for comp v (nm^2/s)
-            (default diff_const_u)
+            Constant component of the total diffusivity for component v
+            (nm^2/s) (default diff_const_u)
         vel_m: float
             Velocity for component m (nm/s) (default vel_u)
         reac_type: int
-            Include reactions? (default False)
+            Include reactions? If so, which type? (default False)
         reac_const: list of floats
-            Reaction constants K_1, K_2,... (1/s) (default [5])
+            Reaction constants k_1, k_2,... (1/s) (default [5])
         reac_slope: float
             Slope of the reaction term sigmoid (1/nm) (default diff_slope_u)
         reac_x_infl: float
@@ -131,10 +132,10 @@ class ADRMDP(object):
         self._samp_len = samp_len
 
         L = 1  # samp_len/samp_len (1)
-        self._J = n_x_steps  # dx = L/J
+        self._J = n_x_steps  # dx = L/(J - 1)
 
         T = time  # (s)
-        self._N = n_t_steps  # dt = T/N
+        self._N = n_t_steps  # dt = T/(N - 1)
 
         self._interf_slope = interf_slope/(1/self._samp_len)  # (1)
 
@@ -186,7 +187,7 @@ class ADRMDP(object):
         self._d_term_total_v_deriv = diff_ampl_v * d_term_x_deriv_v
 
         self._reac_type = reac_type
-        self._reac_const = reac_const
+        self._reac_const = reac_const  # (1/s)
         reac_slope = reac_slope/(1/self._samp_len)  # (1)
         reac_x_infl = reac_x_infl/self._samp_len  # (1)
 
@@ -212,10 +213,12 @@ class ADRMDP(object):
             return ampl/(np.exp(slope * (x - x_infl)) + 1)
 
     def _get_sigm_fun(self, x_infl, slope, ampl=1, deriv=False):
+        '''Get sigmoid function.'''
         return self.sigm_fun(self._x_grid, x_infl, slope, ampl, deriv)
     # =========================================================================
 
     def _get_ini_cond(self):
+        '''Get initial condition.'''
         U = np.zeros(self._J)
         for x1, x2 in zip(self._l_depth_u, self._l_depth_u + self._l_width_u):
             x_one_fourth = (x2 - x1)/4
@@ -276,6 +279,7 @@ class ADRMDP(object):
     # =========================================================================
 
     def _calc_matrices(self, U, V, M):
+        '''Calculate matrices.'''
         sigma_u = (self._d_term_total_u * self._dt)/(2 * self._dx**2)
         sigma_v = (self._d_term_total_v * self._dt)/(2 * self._dx**2)
 
@@ -319,6 +323,7 @@ class ADRMDP(object):
     # =========================================================================
 
     def _calc_r_terms(self, U, V, M):
+        '''Calculate reaction terms.'''
         if self._reac_type is False:
             self._r_term_u = 0
             self._r_term_v = 0
@@ -397,9 +402,9 @@ class ADRMDP(object):
         plt.show()
 
     def plot_diff(self, comps=['u']):
-        '''Plot total diffusivity for comps.
+        '''Plot total diffusivity for specified components.
 
-        comps=['u', 'v', 'm'] (default 'u')
+        comps=['u', 'v', 'm'] (default ['u'])
         '''
         x = self._x_grid * self._samp_len
         for comp in comps:
@@ -414,14 +419,14 @@ class ADRMDP(object):
         plt.show()
 
     def plot_reac(self):
-        '''Plot reaction sigmoid.'''
+        '''Plot the sigmoid of reaction terms.'''
         plt.plot(self._x_grid * self._samp_len, self._r_term_x)
         plt.xlabel('x')
         plt.ylabel('s$_R$(x)')
         plt.show()
 
     def plot_conc(self, comp='u'):
-        '''Plot c(x, t) for comp.
+        '''Plot concentration surface c(x, t) for the specified component.
 
         comp='u' | 'v' | 'm' (default 'u')
         '''
@@ -451,9 +456,10 @@ class ADRMDP(object):
             plt.show()
 
     def plot_conc_sect(self, comps=['u'], times=[0]):
-        '''Plot sections of c(x, t) for times.
+        '''Plot sections of the concentration surface c(x, t) for specified
+        times.
 
-        comps=['u', 'v', 'm'] (default 'u')
+        comps=['u', 'v', 'm'] (default ['u'])
 
         e.g. times=[0, 2, 5] (default [0])
         '''
@@ -474,9 +480,9 @@ class ADRMDP(object):
         plt.show()
 
     def plot_depth_prof(self, comps=['u'], var='depth', comp_max=0.2):
-        '''Plot depth profiles for comps.
+        '''Plot depth profiles for specified components.
 
-        comps=['u', 'v', 'm'] (default 'u')
+        comps=['u', 'v', 'm'] (default ['u'])
 
         var='depth' | 'time' (default 'depth')
 
@@ -533,8 +539,8 @@ class ADRMDP(object):
         plt.show()
 
     def calc_dp_prop(self, comp='u'):
-        ''' Calculate delta-layer depth profile properties for comp (default
-        'u').'''
+        ''' Calculate delta-layer depth profile properties for the specified
+        component (default 'u').'''
         print 'comp:', comp
 
         x = self._t_grid * abs(self._a_t) * self._samp_len  # t -> x (nm)
