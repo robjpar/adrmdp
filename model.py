@@ -29,6 +29,16 @@ class ADRMDP(object):
             Real time requested (s) (default 4.5)
         n_t_steps: int
             Number of time steps (default 500)
+        bound_cond: str
+            Boundary condition (default 'dirichlet')
+        alpha_u: list of floats
+            If bound_cond='dirichlet', this parameter denotes the constant
+            concentrations at the surface and at the bottom for component u
+            (default [0, 0])
+        alpha_v: list of floats
+            If bound_cond='dirichlet', this parameter denotes the constant
+            concentrations at the surface and at the bottom for component v
+            (default [0, 0])
         interf_slope: float
             Slope of the interface sigmoid (1/nm) (default 20)
         samp_d_slope: float
@@ -96,6 +106,11 @@ class ADRMDP(object):
 
         time = kwargs.get('time', 4.5)  # (s)
         n_t_steps = kwargs.get('n_t_steps', 500)
+
+        self._bound_cond = kwargs.get('bound_cond', 'dirichlet')
+        if self._bound_cond == 'dirichlet':
+            self._alpha_u = kwargs.get('alpha_u', [0, 0])
+            self._alpha_v = kwargs.get('alpha_v', [0, 0])
 
         interf_slope = kwargs.get('interf_slope', 20)  # (1/nm)
 
@@ -295,29 +310,32 @@ class ADRMDP(object):
         rho_u = ((self._d_term_total_u_deriv - a) * self._dt) / (4 * self._dx)
         rho_v = ((self._d_term_total_v_deriv - a) * self._dt) / (4 * self._dx)
 
-        self._A_u = np.diagflat(-(sigma_u[1:] + rho_u[1:]), 1) + \
-            np.diagflat(np.concatenate(([1 + sigma_u[0] + rho_u[0]],
-                                        1 + 2 * sigma_u[1: -1],
-                                        [1 + sigma_u[-1] - rho_u[-1]]))) + \
-            np.diagflat(-sigma_u[: -1] + rho_u[: -1], -1)
+        if self._bound_cond == 'dirichlet':
+            self._A_u = np.diagflat(-(sigma_u[1:] + rho_u[1:]), 1) + \
+                np.diagflat(1 + 2 * sigma_u) + \
+                np.diagflat(-sigma_u[: -1] + rho_u[: -1], -1)
 
-        self._B_u = np.diagflat(sigma_u[: -1] + rho_u[: -1], 1) + \
-            np.diagflat(np.concatenate(([1 - sigma_u[0] - rho_u[0]],
-                                        1 - 2 * sigma_u[1: -1],
-                                        [1 - sigma_u[-1] + rho_u[-1]]))) + \
-            np.diagflat(sigma_u[1:] - rho_u[1:], -1)
+            self._B_u = np.diagflat(sigma_u[: -1] + rho_u[: -1], 1) + \
+                np.diagflat(1 - 2 * sigma_u) + \
+                np.diagflat(sigma_u[1:] - rho_u[1:], -1)
 
-        self._A_v = np.diagflat(-(sigma_v[1:] + rho_v[1:]), 1) + \
-            np.diagflat(np.concatenate(([1 + sigma_v[0] + rho_v[0]],
-                                        1 + 2 * sigma_v[1: -1],
-                                        [1 + sigma_v[-1] - rho_v[-1]]))) + \
-            np.diagflat(-sigma_v[: -1] + rho_v[: -1], -1)
+            self._A_v = np.diagflat(-(sigma_v[1:] + rho_v[1:]), 1) + \
+                np.diagflat(1 + 2 * sigma_v) + \
+                np.diagflat(-sigma_v[: -1] + rho_v[: -1], -1)
 
-        self._B_v = np.diagflat(sigma_v[: -1] + rho_v[: -1], 1) + \
-            np.diagflat(np.concatenate(([1 - sigma_v[0] - rho_v[0]],
-                                        1 - 2 * sigma_v[1: -1],
-                                        [1 - sigma_v[-1] + rho_v[-1]]))) + \
-            np.diagflat(sigma_v[1:] - rho_v[1:], -1)
+            self._B_v = np.diagflat(sigma_v[: -1] + rho_v[: -1], 1) + \
+                np.diagflat(1 - 2 * sigma_v) + \
+                np.diagflat(sigma_v[1:] - rho_v[1:], -1)
+
+            self._dirich_term_u[0] = (2 * sigma_u[0] - 2 * rho_u[0]) * \
+                self._alpha_u[0]
+            self._dirich_term_u[-1] = (2 * sigma_u[-1] + 2 * rho_u[-1]) * \
+                self._alpha_u[1]
+
+            self._dirich_term_v[0] = (2 * sigma_v[0] - 2 * rho_v[0]) * \
+                self._alpha_v[0]
+            self._dirich_term_v[-1] = (2 * sigma_v[-1] + 2 * rho_v[-1]) * \
+                self._alpha_v[1]
 
         return a
     # =========================================================================
@@ -360,6 +378,9 @@ class ADRMDP(object):
         self._a_t = np.zeros(self._N)
         # a record of temporary a's needed to convert t to x
 
+        self._dirich_term_u = np.zeros(self._J)
+        self._dirich_term_v = np.zeros(self._J)
+
         self._U_xt[0] = U
         self._V_xt[0] = V
         M = 1 - U - V
@@ -372,9 +393,11 @@ class ADRMDP(object):
         one_fourth = self._N/4
         for ti in range(1, self._N):
             U_new = np.linalg.solve(self._A_u, self._B_u.dot(U) +
-                                    self._r_term_u * self._dt)
+                                    self._r_term_u * self._dt +
+                                    self._dirich_term_u)
             V_new = np.linalg.solve(self._A_v, self._B_v.dot(V) +
-                                    self._r_term_v * self._dt)
+                                    self._r_term_v * self._dt +
+                                    self._dirich_term_v)
 
             U = U_new
             V = V_new
