@@ -30,7 +30,7 @@ class ADRMDP(object):
         n_t_steps: int
             Number of time steps (default 500)
         bound_cond: str
-            Boundary condition (default 'dirichlet')
+            Boundary condition 'dirichlet' | 'neumann' (default 'neumann')
         alpha_u: list of floats
             If bound_cond='dirichlet', this parameter denotes the constant
             concentrations at the surface and at the bottom for component u
@@ -107,7 +107,7 @@ class ADRMDP(object):
         time = kwargs.get('time', 4.5)  # (s)
         n_t_steps = kwargs.get('n_t_steps', 500)
 
-        self._bound_cond = kwargs.get('bound_cond', 'dirichlet')
+        self._bound_cond = kwargs.get('bound_cond', 'neumann')
         if self._bound_cond == 'dirichlet':
             self._alpha_u = kwargs.get('alpha_u', [0, 0])
             self._alpha_v = kwargs.get('alpha_v', [0, 0])
@@ -336,6 +336,31 @@ class ADRMDP(object):
                 self._alpha_v[0]
             self._dirich_term_v[-1] = (2 * sigma_v[-1] + 2 * rho_v[-1]) * \
                 self._alpha_v[1]
+
+        if self._bound_cond == 'neumann':
+            self._A_u = np.diagflat(np.concatenate(
+                ([-2 * sigma_u[0]], -(sigma_u[1: -1] + rho_u[1: -1]))), 1) + \
+                np.diagflat(1 + 2 * sigma_u) + \
+                np.diagflat(np.concatenate(
+                    (-sigma_u[1: -1] + rho_u[1: -1],  [-2 * sigma_u[-1]])), -1)
+
+            self._B_u = np.diagflat(np.concatenate(
+                ([2 * sigma_u[0]], sigma_u[1: -1] + rho_u[1: -1])), 1) + \
+                np.diagflat(1 - 2 * sigma_u) + \
+                np.diagflat(np.concatenate(
+                    (sigma_u[1: -1] - rho_u[1: -1], [2 * sigma_u[-1]])), -1)
+
+            self._A_v = np.diagflat(np.concatenate(
+                ([-2 * sigma_v[0]], -(sigma_v[1: -1] + rho_v[1: -1]))), 1) + \
+                np.diagflat(1 + 2 * sigma_v) + \
+                np.diagflat(np.concatenate(
+                    (-sigma_v[1: -1] + rho_v[1: -1], [-2 * sigma_v[-1]])), -1)
+
+            self._B_v = np.diagflat(np.concatenate(
+                ([2 * sigma_v[0]], sigma_v[1: -1] + rho_v[1: -1])), 1) + \
+                np.diagflat(1 - 2 * sigma_v) + \
+                np.diagflat(np.concatenate(
+                    (sigma_v[1: -1] - rho_v[1: -1], [2 * sigma_v[-1]])), -1)
 
         return a
     # =========================================================================
