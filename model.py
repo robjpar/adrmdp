@@ -311,17 +311,17 @@ class ADRMDP(object):
         rho_v = ((self._d_term_total_v_deriv - a) * self._dt) / (4 * self._dx)
 
         if self._bound_cond == 'dirichlet':
-            self._A_u = np.diagflat(-(sigma_u[1:] + rho_u[1:]), 1) + \
+            self._A_u = np.diagflat(-(sigma_u[: -1] + rho_u[: -1]), 1) + \
                 np.diagflat(1 + 2 * sigma_u) + \
-                np.diagflat(-sigma_u[: -1] + rho_u[: -1], -1)
+                np.diagflat(-sigma_u[1:] + rho_u[1:], -1)
 
             self._B_u = np.diagflat(sigma_u[: -1] + rho_u[: -1], 1) + \
                 np.diagflat(1 - 2 * sigma_u) + \
                 np.diagflat(sigma_u[1:] - rho_u[1:], -1)
 
-            self._A_v = np.diagflat(-(sigma_v[1:] + rho_v[1:]), 1) + \
+            self._A_v = np.diagflat(-(sigma_v[: -1] + rho_v[: -1]), 1) + \
                 np.diagflat(1 + 2 * sigma_v) + \
-                np.diagflat(-sigma_v[: -1] + rho_v[: -1], -1)
+                np.diagflat(-sigma_v[1:] + rho_v[1:], -1)
 
             self._B_v = np.diagflat(sigma_v[: -1] + rho_v[: -1], 1) + \
                 np.diagflat(1 - 2 * sigma_v) + \
