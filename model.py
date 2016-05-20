@@ -30,7 +30,8 @@ class ADRMDP(object):
         n_t_steps: int
             Number of time steps (default 500)
         bound_cond: str
-            Boundary condition 'dirichlet' | 'neumann' (default 'neumann')
+            Boundary condition 'dirichlet' | 'neumann' | 'robin'
+            (default 'neumann')
         alpha_u: list of floats
             If bound_cond='dirichlet', this parameter denotes the constant
             concentrations at the surface and at the bottom for component u
@@ -337,7 +338,7 @@ class ADRMDP(object):
             self._dirich_term_v[-1] = (2 * sigma_v[-1] + 2 * rho_v[-1]) * \
                 self._alpha_v[1]
 
-        if self._bound_cond == 'neumann':
+        if self._bound_cond == 'neumann' or self._bound_cond == 'robin':
             self._A_u = np.diagflat(np.concatenate(
                 ([-2 * sigma_u[0]], -(sigma_u[1: -1] + rho_u[1: -1]))), 1) + \
                 np.diagflat(1 + 2 * sigma_u) + \
@@ -361,6 +362,27 @@ class ADRMDP(object):
                 np.diagflat(1 - 2 * sigma_v) + \
                 np.diagflat(np.concatenate(
                     (sigma_v[1: -1] - rho_v[1: -1], [2 * sigma_v[-1]])), -1)
+
+        if self._bound_cond == 'robin':
+            self._A_u[0, 0] = 1 + 2 * sigma_u[0] - 2 * self._dx * a * \
+                (-sigma_u[0] + rho_u[0]) / self._d_term_total_u[0]
+            self._A_u[-1, -1] = 1 + 2 * sigma_u[-1] - 2 * self._dx * a * \
+                (sigma_u[-1] + rho_u[-1]) / self._d_term_total_u[-1]
+
+            self._B_u[0, 0] = 1 - 2 * sigma_u[0] - 2 * self._dx * a * \
+                (sigma_u[0] - rho_u[0]) / self._d_term_total_u[0]
+            self._B_u[-1, -1] = 1 - 2 * sigma_u[-1] + 2 * self._dx * a * \
+                (sigma_u[-1] + rho_u[-1]) / self._d_term_total_u[-1]
+
+            self._A_v[0, 0] = 1 + 2 * sigma_v[0] - 2 * self._dx * a * \
+                (-sigma_v[0] + rho_v[0]) / self._d_term_total_v[0]
+            self._A_v[-1, -1] = 1 + 2 * sigma_v[-1] - 2 * self._dx * a * \
+                (sigma_v[-1] + rho_v[-1]) / self._d_term_total_v[-1]
+
+            self._B_v[0, 0] = 1 - 2 * sigma_v[0] - 2 * self._dx * a * \
+                (sigma_v[0] - rho_v[0]) / self._d_term_total_v[0]
+            self._B_v[-1, -1] = 1 - 2 * sigma_v[-1] + 2 * self._dx * a * \
+                (sigma_v[-1] + rho_v[-1]) / self._d_term_total_v[-1]
 
         return a
     # =========================================================================
