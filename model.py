@@ -311,23 +311,24 @@ class ADRMDP(object):
         rho_u = ((self._d_term_total_u_deriv - a) * self._dt) / (4 * self._dx)
         rho_v = ((self._d_term_total_v_deriv - a) * self._dt) / (4 * self._dx)
 
+        # Dirichlet boundary condition
+        self._A_u = np.diagflat(-(sigma_u[: -1] + rho_u[: -1]), 1) + \
+            np.diagflat(1 + 2 * sigma_u) + \
+            np.diagflat(-sigma_u[1:] + rho_u[1:], -1)
+
+        self._B_u = np.diagflat(sigma_u[: -1] + rho_u[: -1], 1) + \
+            np.diagflat(1 - 2 * sigma_u) + \
+            np.diagflat(sigma_u[1:] - rho_u[1:], -1)
+
+        self._A_v = np.diagflat(-(sigma_v[: -1] + rho_v[: -1]), 1) + \
+            np.diagflat(1 + 2 * sigma_v) + \
+            np.diagflat(-sigma_v[1:] + rho_v[1:], -1)
+
+        self._B_v = np.diagflat(sigma_v[: -1] + rho_v[: -1], 1) + \
+            np.diagflat(1 - 2 * sigma_v) + \
+            np.diagflat(sigma_v[1:] - rho_v[1:], -1)
+
         if self._bound_cond == 'dirichlet':
-            self._A_u = np.diagflat(-(sigma_u[: -1] + rho_u[: -1]), 1) + \
-                np.diagflat(1 + 2 * sigma_u) + \
-                np.diagflat(-sigma_u[1:] + rho_u[1:], -1)
-
-            self._B_u = np.diagflat(sigma_u[: -1] + rho_u[: -1], 1) + \
-                np.diagflat(1 - 2 * sigma_u) + \
-                np.diagflat(sigma_u[1:] - rho_u[1:], -1)
-
-            self._A_v = np.diagflat(-(sigma_v[: -1] + rho_v[: -1]), 1) + \
-                np.diagflat(1 + 2 * sigma_v) + \
-                np.diagflat(-sigma_v[1:] + rho_v[1:], -1)
-
-            self._B_v = np.diagflat(sigma_v[: -1] + rho_v[: -1], 1) + \
-                np.diagflat(1 - 2 * sigma_v) + \
-                np.diagflat(sigma_v[1:] - rho_v[1:], -1)
-
             self._dirich_term_u[0] = (2 * sigma_u[0] - 2 * rho_u[0]) * \
                 self._alpha_u[0]
             self._dirich_term_u[-1] = (2 * sigma_u[-1] + 2 * rho_u[-1]) * \
@@ -339,29 +340,17 @@ class ADRMDP(object):
                 self._alpha_v[1]
 
         if self._bound_cond == 'neumann' or self._bound_cond == 'robin':
-            self._A_u = np.diagflat(np.concatenate(
-                ([-2 * sigma_u[0]], -(sigma_u[1: -1] + rho_u[1: -1]))), 1) + \
-                np.diagflat(1 + 2 * sigma_u) + \
-                np.diagflat(np.concatenate(
-                    (-sigma_u[1: -1] + rho_u[1: -1],  [-2 * sigma_u[-1]])), -1)
+            self._A_u[0, 1] = -2 * sigma_u[0]
+            self._A_u[-1, -2] = -2 * sigma_u[-1]
 
-            self._B_u = np.diagflat(np.concatenate(
-                ([2 * sigma_u[0]], sigma_u[1: -1] + rho_u[1: -1])), 1) + \
-                np.diagflat(1 - 2 * sigma_u) + \
-                np.diagflat(np.concatenate(
-                    (sigma_u[1: -1] - rho_u[1: -1], [2 * sigma_u[-1]])), -1)
+            self._B_u[0, 1] = 2 * sigma_u[0]
+            self._B_u[-1, -2] = 2 * sigma_u[-1]
 
-            self._A_v = np.diagflat(np.concatenate(
-                ([-2 * sigma_v[0]], -(sigma_v[1: -1] + rho_v[1: -1]))), 1) + \
-                np.diagflat(1 + 2 * sigma_v) + \
-                np.diagflat(np.concatenate(
-                    (-sigma_v[1: -1] + rho_v[1: -1], [-2 * sigma_v[-1]])), -1)
+            self._A_v[0, 1] = -2 * sigma_v[0]
+            self._A_v[-1, -2] = -2 * sigma_v[-1]
 
-            self._B_v = np.diagflat(np.concatenate(
-                ([2 * sigma_v[0]], sigma_v[1: -1] + rho_v[1: -1])), 1) + \
-                np.diagflat(1 - 2 * sigma_v) + \
-                np.diagflat(np.concatenate(
-                    (sigma_v[1: -1] - rho_v[1: -1], [2 * sigma_v[-1]])), -1)
+            self._B_v[0, 1] = 2 * sigma_v[0]
+            self._B_v[-1, -2] = 2 * sigma_v[-1]
 
         if self._bound_cond == 'robin':
             self._A_u[0, 0] = 1 + 2 * sigma_u[0] - 2 * self._dx * a * \
