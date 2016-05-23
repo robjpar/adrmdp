@@ -223,7 +223,7 @@ class ADRMDP(object):
         >>> plot(x, ADRMDP.sigm_fun(x, 1, 1, 1))
         '''
         if deriv:
-            return ampl * slope * np.exp(slope * (x - x_infl)) / \
+            return -ampl * slope * np.exp(slope * (x - x_infl)) / \
                 (np.exp(slope * (x - x_infl)) + 1)**2
         else:
             return ampl/(np.exp(slope * (x - x_infl)) + 1)
