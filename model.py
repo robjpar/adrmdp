@@ -9,6 +9,7 @@ import numpy as np
 import scipy.integrate
 from matplotlib import cm
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Slider, Cursor, CheckButtons
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="matplotlib")
 # UserWarning: This figure includes Axes that are not compatible with
@@ -585,29 +586,83 @@ class ADRMDP(object):
             cbar.set_label(comp)
             plt.show()
 
-    def plot_conc_sect(self, comps=['u'], times=[0]):
+    def plot_conc_sect(self, comps=['u'], times=[0], interact=False):
         '''Plot sections of the concentration surface c(x, t) for specified
         times.
 
         comps=['u', 'v', 'm'] (default ['u'])
 
         e.g. times=[0, 2, 5] (default [0])
+
+        If interact=True, the parameters are being set interactively.
         '''
         x = self._x_grid * self._samp_len
-        for time in times:
-            for comp in comps:
-                if comp == 'u':
-                    y = self._U_xt[np.argmax(self._t_grid >= time), :]
-                if comp == 'v':
-                    y = self._V_xt[np.argmax(self._t_grid >= time), :]
-                if comp == 'm':
-                    y = self._M_xt[np.argmax(self._t_grid >= time), :]
-                plt.plot(x, y, label='%s, %s' % (comp, time))
-        plt.ylim(-0.1, 1.1)
-        plt.xlabel('x (nm)')
-        plt.ylabel('c')
-        plt.legend(loc='best')
-        plt.show()
+
+        if interact is False:
+            for time in times:
+                for comp in comps:
+                    if comp == 'u':
+                        y = self._U_xt[np.argmax(self._t_grid >= time), :]
+                    if comp == 'v':
+                        y = self._V_xt[np.argmax(self._t_grid >= time), :]
+                    if comp == 'm':
+                        y = self._M_xt[np.argmax(self._t_grid >= time), :]
+                    plt.plot(x, y, label='%s, %s' % (comp, time))
+            plt.ylim(-0.1, 1.1)
+            plt.xlabel('x (nm)')
+            plt.ylabel('c')
+            plt.legend(loc='best')
+            plt.show()
+
+        if interact is True:
+            fig = plt.figure('interactive plot_conc_sect()')
+            ax = fig.add_subplot(111)
+            plt.subplots_adjust(left=0.1, bottom=0.33, right=0.9, top=0.9)
+            ax.set_xlabel('x')
+            ax.set_ylabel('c')
+            ax.set_title('Concentration vs. depth for given time')
+            ax.grid(True)
+
+            y = self._U_xt[0, :]
+            l0, = ax.plot(x, y, lw=2)
+            y = self._V_xt[0, :]
+            l1, = ax.plot(x, y, visible=False, lw=2)
+            y = self._M_xt[0, :]
+            l2, = ax.plot(x, y, visible=False, lw=2)
+            plt.axis([0, self._samp_len, 0, 1.1])
+
+            axS = plt.axes([0.13, 0.2, 0.77, 0.03])
+            self._sT = Slider(axS, 'time (s)', 0, self._T, valinit=0)
+
+            def update(val):
+                time = self._sT.val
+                y = self._U_xt[np.argmax(self._t_grid >= time), :]
+                l0.set_ydata(y)
+                y = self._V_xt[np.argmax(self._t_grid >= time), :]
+                l1.set_ydata(y)
+                y = self._M_xt[np.argmax(self._t_grid >= time), :]
+                l2.set_ydata(y)
+                plt.draw()
+            self._sT.on_changed(update)
+
+            self._cursor = Cursor(ax, useblit=True, linestyle='--',
+                                  linewidth=1)
+
+            axC = plt.axes([0.13, 0.012, 0.1, 0.15])
+            self._checkB = CheckButtons(axC, ('u', 'v', 'm'),
+                                        (True, False, False))
+
+            def func(label):
+                if label == 'u':
+                    l0.set_visible(not l0.get_visible())
+                elif label == 'v':
+                    l1.set_visible(not l1.get_visible())
+                elif label == 'm':
+                    l2.set_visible(not l2.get_visible())
+                plt.draw()
+            self._checkB.on_clicked(func)
+
+            plt.show()
 
     def plot_depth_prof(self, comps=['u'], var='depth', comp_max=0.2):
         '''Plot depth profiles for specified components.
