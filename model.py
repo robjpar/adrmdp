@@ -48,10 +48,15 @@ class ADRMDP(object):
             (default [0, 0])
         interf_slope: float
             Slope of the interface sigmoid (1/nm) (default 20)
+        sampl_depth: str
+            Shape of the sampling depth depth dependence 'surf' | 'sigm'
+            (default 'sigmoid')
         sampl_d_slope: float
-            Slope of the sampling depth sigmoid (1/nm) (default 1.7)
+            If sampl_depth='sigm', this parameter denotes the slope of the
+            sampling depth sigmoid (1/nm) (default 1.7)
         sampl_d_infl: float
-            Inflection point of the sampling depth sigmoid (nm) (default 2.2)
+            If sampl_depth='sigm', this parameter denotes the inflection point
+            of the sampling depth sigmoid (nm) (default 2.2)
         l_depth_u: list of floats
             Layers of component u (nm) (default [14])
         l_width_u: list of floats
@@ -123,8 +128,10 @@ class ADRMDP(object):
 
         interf_slope = kwargs.get('interf_slope', 20)  # (1/nm)
 
-        sampl_d_slope = kwargs.get('sampl_d_slope', 1.7)  # (1/nm)
-        sampl_d_infl = kwargs.get('sampl_d_infl', 2.2)  # (nm)
+        sampl_depth = kwargs.get('sampl_depth', 'sigm')
+        if sampl_depth == 'sigm':
+            sampl_d_slope = kwargs.get('sampl_d_slope', 1.7)  # (1/nm)
+            sampl_d_infl = kwargs.get('sampl_d_infl', 2.2)  # (nm)
 
         l_depth_u = kwargs.get('l_depth_u', [14])  # (nm)
         l_width_u = kwargs.get('l_width_u', [1])  # (nm)
@@ -166,8 +173,9 @@ class ADRMDP(object):
 
         self._interf_slope = interf_slope/(1/self._samp_len)  # (1)
 
-        sampl_d_slope = sampl_d_slope/(1/self._samp_len)  # (1)
-        sampl_d_infl = sampl_d_infl/self._samp_len  # (1)
+        if sampl_depth == 'sigm':
+            sampl_d_slope = sampl_d_slope/(1/self._samp_len)  # (1)
+            sampl_d_infl = sampl_d_infl/self._samp_len  # (1)
 
         self._l_depth_u = np.array(l_depth_u)/self._samp_len  # (1)
         self._l_width_u = np.array(l_width_u)/self._samp_len  # (1)
@@ -197,7 +205,11 @@ class ADRMDP(object):
         self._dt = self._T/(self._N - 1)
         self._t_grid = np.zeros(1)
 
-        self._sampl_d_x = self._get_sigm_fun(sampl_d_infl, sampl_d_slope)
+        if sampl_depth == 'surf':
+            self._sampl_d_x = np.zeros(self._J)
+            self._sampl_d_x[0] = 1
+        if sampl_depth == 'sigm':
+            self._sampl_d_x = self._get_sigm_fun(sampl_d_infl, sampl_d_slope)
 
         d_term_x_u = self._get_sigm_fun(diff_x_infl_u, diff_slope_u)
         d_term_x_v = self._get_sigm_fun(diff_x_infl_v, diff_slope_v)
