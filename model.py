@@ -28,7 +28,13 @@ class ADRMDP(object):
         time: float
             Real time requested (s) (default 4.5)
         n_t_steps: int
-            Number of time steps (default 500)
+            Number of time steps. Meaningful only if num_meth='cn'
+            (default 500)
+        num_meth: str
+            Numerical method 'cn' | 'os'. If 'cn', the Crank-Nicholson
+            algorythm is used to solve the whole equation. If 'os', the
+            opertor splitting approach is used and the analytical solution of
+            the advection term is utilized (default 'os')
         bound_cond: str
             Boundary condition 'dirichlet' | 'neumann' | 'robin'
             (default 'neumann')
@@ -108,6 +114,8 @@ class ADRMDP(object):
         time = kwargs.get('time', 4.5)  # (s)
         n_t_steps = kwargs.get('n_t_steps', 500)
 
+        self._num_meth = kwargs.get('num_meth', 'os')
+
         self._bound_cond = kwargs.get('bound_cond', 'neumann')
         if self._bound_cond == 'dirichlet':
             self._alpha_u = kwargs.get('alpha_u', [0, 0])
@@ -124,8 +132,11 @@ class ADRMDP(object):
         diff_ampl_u = kwargs.get('diff_ampl_u', 18)  # (nm^2/s)
         diff_slope_u = kwargs.get('diff_slope_u', 0.7)  # (1/nm)
         diff_x_infl_u = kwargs.get('diff_x_infl_u', 3.5)  # (nm)
-        diff_const_u = kwargs.get('diff_const_u', 0.08)  # (nm^2/s)
-        # small positive value needed for numerical stability
+        if self._num_meth == 'cn':
+            diff_const_u = kwargs.get('diff_const_u', 0.08)  # (nm^2/s)
+            # small positive value needed for numerical stability
+        if self._num_meth == 'os':
+            diff_const_u = kwargs.get('diff_const_u', 0)  # (nm^2/s)
 
         l_depth_v = kwargs.get('l_depth_v', [])  # (nm)
         l_width_v = kwargs.get('l_width_v', [])  # (nm)
@@ -150,7 +161,7 @@ class ADRMDP(object):
         L = 1  # samp_len/samp_len (1)
         self._J = n_x_steps  # dx = L/(J - 1)
 
-        T = time  # (s)
+        self._T = time  # (s)
         self._N = n_t_steps  # dt = T/(N - 1)
 
         self._interf_slope = interf_slope/(1/self._samp_len)  # (1)
@@ -183,8 +194,8 @@ class ADRMDP(object):
         self._dx = L/(self._J - 1)
         self._x_grid = np.array([j * self._dx for j in range(self._J)])
 
-        self._dt = T/(self._N - 1)
-        self._t_grid = np.array([n * self._dt for n in range(self._N)])
+        self._dt = self._T/(self._N - 1)
+        self._t_grid = np.zeros(1)
 
         self._samp_d_x = self._get_sigm_fun(samp_d_infl, samp_d_slope)
 
@@ -296,9 +307,6 @@ class ADRMDP(object):
 
     def _calc_matrices(self, U, V, M):
         '''Calculate matrices.'''
-        sigma_u = (self._d_term_total_u * self._dt)/(2 * self._dx**2)
-        sigma_v = (self._d_term_total_v * self._dt)/(2 * self._dx**2)
-
         u_surf = np.average(U, weights=self._samp_d_x)
         v_surf = np.average(V, weights=self._samp_d_x)
         m_surf = np.average(M, weights=self._samp_d_x)
@@ -308,8 +316,22 @@ class ADRMDP(object):
         else:
             a = self._a_u * u_surf + self._a_v * v_surf + self._a_m * m_surf
 
-        rho_u = ((self._d_term_total_u_deriv - a) * self._dt) / (4 * self._dx)
-        rho_v = ((self._d_term_total_v_deriv - a) * self._dt) / (4 * self._dx)
+        if self._num_meth == 'os':
+            self._dt = self._dx/abs(a)
+
+        sigma_u = (self._d_term_total_u * self._dt)/(2 * self._dx**2)
+        sigma_v = (self._d_term_total_v * self._dt)/(2 * self._dx**2)
+
+        if self._num_meth == 'cn':
+            rho_u = ((self._d_term_total_u_deriv - a) * self._dt) / \
+                (4 * self._dx)
+            rho_v = ((self._d_term_total_v_deriv - a) * self._dt) / \
+                (4 * self._dx)
+        if self._num_meth == 'os':
+            rho_u = (self._d_term_total_u_deriv * self._dt) / \
+                (4 * self._dx)
+            rho_v = (self._d_term_total_v_deriv * self._dt) / \
+                (4 * self._dx)
 
         # Dirichlet boundary condition
         self._A_u = np.diagflat(-(sigma_u[: -1] + rho_u[: -1]), 1) + \
@@ -408,10 +430,10 @@ class ADRMDP(object):
 
         U, V = self._get_ini_cond()
 
-        self._U_xt = np.zeros((self._N, self._J))
-        self._V_xt = np.zeros((self._N, self._J))
-        self._M_xt = np.zeros((self._N, self._J))
-        self._a_t = np.zeros(self._N)
+        self._U_xt = np.zeros((1, self._J))
+        self._V_xt = np.zeros((1, self._J))
+        self._M_xt = np.zeros((1, self._J))
+        self._a_t = np.zeros(1)
         # a record of temporary a's needed to convert t to x
 
         self._dirich_term_u = np.zeros(self._J)
@@ -426,8 +448,7 @@ class ADRMDP(object):
 
         self._calc_r_terms(U, V, M)
 
-        one_fourth = self._N/4
-        for ti in range(1, self._N):
+        while(True):
             U_new = np.linalg.solve(self._A_u, self._B_u.dot(U) +
                                     self._r_term_u * self._dt +
                                     self._dirich_term_u)
@@ -435,20 +456,58 @@ class ADRMDP(object):
                                     self._r_term_v * self._dt +
                                     self._dirich_term_v)
 
+            if self._num_meth == 'os':
+                if a < 0:
+                    if self._bound_cond == 'dirichlet':
+                        alpha_u = self._alpha_u[1]
+                        alpha_v = self._alpha_v[1]
+                    if self._bound_cond == 'neumann':
+                        alpha_u = U_new[-2]
+                        alpha_v = V_new[-2]
+                    if self._bound_cond == 'robin':
+                        alpha_u = U_new[-2] + 2 * self._dx * a * U_new[-1] / \
+                            self._d_term_total_u[-1]
+                        alpha_v = V_new[-2] + 2 * self._dx * a * V_new[-1] / \
+                            self._d_term_total_v[-1]
+
+                    U_new = np.concatenate((U_new[1:], [alpha_u]))
+                    V_new = np.concatenate((V_new[1:], [alpha_v]))
+
+                if a > 0:
+                    if self._bound_cond == 'dirichlet':
+                        alpha_u = self._alpha_u[0]
+                        alpha_v = self._alpha_v[0]
+                    if self._bound_cond == 'neumann':
+                        alpha_u = U_new[1]
+                        alpha_v = V_new[1]
+                    if self._bound_cond == 'robin':
+                        alpha_u = U_new[1] - 2 * self._dx * a * U_new[0] / \
+                            self._d_term_total_u[0]
+                        alpha_v = V_new[1] - 2 * self._dx * a * V_new[0] / \
+                            self._d_term_total_v[0]
+                    U_new = np.concatenate(([alpha_u], U_new[: -1]))
+                    V_new = np.concatenate(([alpha_v], V_new[: -1]))
+
+            if self._t_grid[-1] >= self._T:
+                break
+
+            self._t_grid = np.concatenate((self._t_grid,
+                                           [self._t_grid[-1] + self._dt]))
+
             U = U_new
             V = V_new
 
-            self._U_xt[ti] = U
-            self._V_xt[ti] = V
+            self._U_xt = np.concatenate((self._U_xt, [U]))
+            self._V_xt = np.concatenate((self._V_xt, [V]))
             M = 1 - U - V
-            self._M_xt[ti] = M
+            self._M_xt = np.concatenate((self._M_xt, [M]))
             a = self._calc_matrices(U, V, M)
-            self._a_t[ti] = a
+            self._a_t = np.concatenate((self._a_t, [a]))
 
             self._calc_r_terms(U, V, M)
 
-            if ti % one_fourth == 0:
-                print '.',
+            if len(self._t_grid) % 500 == 0:
+                print '%i%%' % (self._t_grid[-1]/self._T * 100),
 
         print 'done'
     # =========================================================================
@@ -526,11 +585,11 @@ class ADRMDP(object):
         for time in times:
             for comp in comps:
                 if comp == 'u':
-                    y = self._U_xt[int(time/self._dt), :]
+                    y = self._U_xt[np.argmax(self._t_grid >= time), :]
                 if comp == 'v':
-                    y = self._V_xt[int(time/self._dt), :]
+                    y = self._V_xt[np.argmax(self._t_grid >= time), :]
                 if comp == 'm':
-                    y = self._M_xt[int(time/self._dt), :]
+                    y = self._M_xt[np.argmax(self._t_grid >= time), :]
                 plt.plot(x, y, label='%s, %s' % (comp, time))
         plt.ylim(-0.1, 1.1)
         plt.xlabel('x (nm)')
