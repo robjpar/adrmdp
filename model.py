@@ -212,16 +212,16 @@ class ADRMDP(object):
         if sampl_depth == 'sigm':
             self._sampl_d_x = self._get_sigm_fun(sampl_d_infl, sampl_d_slope)
 
-        d_term_x_u = self._get_sigm_fun(diff_x_infl_u, diff_slope_u)
-        d_term_x_v = self._get_sigm_fun(diff_x_infl_v, diff_slope_v)
+        self._d_term_x_u = self._get_sigm_fun(diff_x_infl_u, diff_slope_u)
+        self._d_term_x_v = self._get_sigm_fun(diff_x_infl_v, diff_slope_v)
 
         d_term_x_deriv_u = self._get_sigm_fun(diff_x_infl_u, diff_slope_u,
                                               deriv=True)
         d_term_x_deriv_v = self._get_sigm_fun(diff_x_infl_v, diff_slope_v,
                                               deriv=True)
 
-        self._d_term_total_u = diff_ampl_u * d_term_x_u + diff_u_const
-        self._d_term_total_v = diff_ampl_v * d_term_x_v + diff_v_const
+        self._d_term_total_u = diff_ampl_u * self._d_term_x_u + diff_u_const
+        self._d_term_total_v = diff_ampl_v * self._d_term_x_v + diff_v_const
 
         self._d_term_total_u_deriv = diff_ampl_u * d_term_x_deriv_u
         self._d_term_total_v_deriv = diff_ampl_v * d_term_x_deriv_v
@@ -618,18 +618,36 @@ class ADRMDP(object):
             fig = plt.figure('interactive plot_conc_sect()')
             ax = fig.add_subplot(111)
             plt.subplots_adjust(left=0.1, bottom=0.33, right=0.9, top=0.9)
-            ax.set_xlabel('x')
+            ax.set_xlabel('x (nm)')
             ax.set_ylabel('c')
             ax.set_title('Concentration vs. depth for given time')
             ax.grid(True)
 
             y = self._U_xt[0, :]
-            l0, = ax.plot(x, y, lw=2)
+            l0, = ax.plot(x, y, 'b', lw=2)
             y = self._V_xt[0, :]
-            l1, = ax.plot(x, y, visible=False, lw=2)
+            l1, = ax.plot(x, y, 'g', visible=False, lw=2)
             y = self._M_xt[0, :]
-            l2, = ax.plot(x, y, visible=False, lw=2)
+            l2, = ax.plot(x, y, 'r', visible=False, lw=2)
             plt.axis([0, self._samp_len, 0, 1.1])
+
+            ax.plot(x, self._sampl_d_x, 'k--', lw=1, label='sampl_d')
+            l3, = ax.plot(x, self._d_term_x_u, 'b', lw=1, label='diff_u')
+            l4, = ax.plot(x, self._d_term_x_v, 'g', lw=1, label='diff_v')
+            if self._reac_type is not False:
+                ax.plot(x, self._r_term_x, 'c-.', lw=1, label='reac')
+            ax.legend(loc='best')
+            l4.set_visible(False)
+            
+            for d, w in zip(self._l_depth_u, self._l_width_u):
+                plt.axvspan(d * self._samp_len,
+                                    (d + w) * self._samp_len, color='blue',
+                                    alpha=0.2)
+            for d, w in zip(self._l_depth_v, self._l_width_v):
+                plt.axvspan(d * self._samp_len,
+                                    (d + w) * self._samp_len, color='green',
+                                    alpha=0.2)
+
 
             axS = plt.axes([0.13, 0.2, 0.77, 0.03])
             self._sT = Slider(axS, 'time (s)', 0, self._T, valinit=0)
@@ -655,8 +673,10 @@ class ADRMDP(object):
             def func(label):
                 if label == 'u':
                     l0.set_visible(not l0.get_visible())
+                    l3.set_visible(not l3.get_visible())
                 elif label == 'v':
                     l1.set_visible(not l1.get_visible())
+                    l4.set_visible(not l4.get_visible())
                 elif label == 'm':
                     l2.set_visible(not l2.get_visible())
                 plt.draw()
