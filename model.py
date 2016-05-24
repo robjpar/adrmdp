@@ -48,9 +48,9 @@ class ADRMDP(object):
             (default [0, 0])
         interf_slope: float
             Slope of the interface sigmoid (1/nm) (default 20)
-        samp_d_slope: float
+        sampl_d_slope: float
             Slope of the sampling depth sigmoid (1/nm) (default 1.7)
-        samp_d_infl: float
+        sampl_d_infl: float
             Inflection point of the sampling depth sigmoid (nm) (default 2.2)
         l_depth_u: list of floats
             Layers of component u (nm) (default [14])
@@ -123,8 +123,8 @@ class ADRMDP(object):
 
         interf_slope = kwargs.get('interf_slope', 20)  # (1/nm)
 
-        samp_d_slope = kwargs.get('samp_d_slope', 1.7)  # (1/nm)
-        samp_d_infl = kwargs.get('samp_d_infl', 2.2)  # (nm)
+        sampl_d_slope = kwargs.get('sampl_d_slope', 1.7)  # (1/nm)
+        sampl_d_infl = kwargs.get('sampl_d_infl', 2.2)  # (nm)
 
         l_depth_u = kwargs.get('l_depth_u', [14])  # (nm)
         l_width_u = kwargs.get('l_width_u', [1])  # (nm)
@@ -166,8 +166,8 @@ class ADRMDP(object):
 
         self._interf_slope = interf_slope/(1/self._samp_len)  # (1)
 
-        samp_d_slope = samp_d_slope/(1/self._samp_len)  # (1)
-        samp_d_infl = samp_d_infl/self._samp_len  # (1)
+        sampl_d_slope = sampl_d_slope/(1/self._samp_len)  # (1)
+        sampl_d_infl = sampl_d_infl/self._samp_len  # (1)
 
         self._l_depth_u = np.array(l_depth_u)/self._samp_len  # (1)
         self._l_width_u = np.array(l_width_u)/self._samp_len  # (1)
@@ -197,7 +197,7 @@ class ADRMDP(object):
         self._dt = self._T/(self._N - 1)
         self._t_grid = np.zeros(1)
 
-        self._samp_d_x = self._get_sigm_fun(samp_d_infl, samp_d_slope)
+        self._sampl_d_x = self._get_sigm_fun(sampl_d_infl, sampl_d_slope)
 
         d_term_x_u = self._get_sigm_fun(diff_x_infl_u, diff_slope_u)
         d_term_x_v = self._get_sigm_fun(diff_x_infl_v, diff_slope_v)
@@ -307,9 +307,9 @@ class ADRMDP(object):
 
     def _calc_matrices(self, U, V, M):
         '''Calculate matrices.'''
-        u_surf = np.average(U, weights=self._samp_d_x)
-        v_surf = np.average(V, weights=self._samp_d_x)
-        m_surf = np.average(M, weights=self._samp_d_x)
+        u_surf = np.average(U, weights=self._sampl_d_x)
+        v_surf = np.average(V, weights=self._sampl_d_x)
+        m_surf = np.average(M, weights=self._sampl_d_x)
 
         if m_surf < 0:
             a = (self._a_u * u_surf + self._a_v * v_surf)/(u_surf + v_surf)
@@ -512,9 +512,9 @@ class ADRMDP(object):
         print 'done'
     # =========================================================================
 
-    def plot_samp_d(self):
+    def plot_sampl_d(self):
         '''Plot sampling depth sigmoid.'''
-        plt.plot(self._x_grid * self._samp_len, self._samp_d_x)
+        plt.plot(self._x_grid * self._samp_len, self._sampl_d_x)
         plt.xlabel('x (nm)')
         plt.ylabel('s$_S$(x)')
         plt.show()
@@ -614,13 +614,13 @@ class ADRMDP(object):
         for comp in comps:
             if comp == 'u':
                 # u(t, x ~ 0)
-                y = np.average(self._U_xt, axis=1, weights=self._samp_d_x)
+                y = np.average(self._U_xt, axis=1, weights=self._sampl_d_x)
             if comp == 'v':
                 # v(t, x ~ 0)
-                y = np.average(self._V_xt, axis=1, weights=self._samp_d_x)
+                y = np.average(self._V_xt, axis=1, weights=self._sampl_d_x)
             if comp == 'm':
                 # m(t, x ~ 0)
-                y = np.average(self._M_xt, axis=1, weights=self._samp_d_x)
+                y = np.average(self._M_xt, axis=1, weights=self._sampl_d_x)
             col = plt.plot(x, y, label=comp)[0].get_color()
 
             if var == 'depth':
@@ -664,13 +664,13 @@ class ADRMDP(object):
         x = self._t_grid * abs(self._a_t) * self._samp_len  # t -> x (nm)
         if comp == 'u':
             # u(t, x ~ 0)
-            y = np.average(self._U_xt, axis=1, weights=self._samp_d_x)
+            y = np.average(self._U_xt, axis=1, weights=self._sampl_d_x)
         if comp == 'v':
             # v(t, x ~ 0)
-            y = np.average(self._V_xt, axis=1, weights=self._samp_d_x)
+            y = np.average(self._V_xt, axis=1, weights=self._sampl_d_x)
         if comp == 'm':
             # m(t, x ~ 0)
-            y = np.average(self._M_xt, axis=1, weights=self._samp_d_x)
+            y = np.average(self._M_xt, axis=1, weights=self._sampl_d_x)
 
         integral = scipy.integrate.simps(y, x=x)
         print 'integral: %g nm' % integral
@@ -755,7 +755,7 @@ class ADRMDP(object):
 # =============================================================================
 
 
-def comp_samp_d(*args):
+def comp_sampl_d(*args):
     '''Compare sampling depth sigmoids.
 
     e.g. args=m1, m2,...
@@ -763,7 +763,7 @@ def comp_samp_d(*args):
     m1 = args[0]
     x = m1._x_grid * m1._samp_len
     for i, m in enumerate(args):
-        plt.plot(x, m._samp_d_x, label=i + 1)
+        plt.plot(x, m._sampl_d_x, label=i + 1)
     plt.xlabel('x (nm)')
     plt.ylabel('s$_S$(x)')
     plt.legend(loc='best')
@@ -817,13 +817,13 @@ def comp_depth_prof(*args, **kwargs):
     for i, m in enumerate(args):
         if comp == 'u':
             # u(t, x ~ 0)
-            y = np.average(m._U_xt, axis=1, weights=m._samp_d_x)
+            y = np.average(m._U_xt, axis=1, weights=m._sampl_d_x)
         if comp == 'v':
             # v(t, x ~ 0)
-            y = np.average(m._V_xt, axis=1, weights=m._samp_d_x)
+            y = np.average(m._V_xt, axis=1, weights=m._sampl_d_x)
         if comp == 'm':
             # m(t, x ~ 0)
-            y = np.average(m._M_xt, axis=1, weights=m._samp_d_x)
+            y = np.average(m._M_xt, axis=1, weights=m._sampl_d_x)
 
         col = plt.plot(x, y, label=i + 1)[0].get_color()
         if i == 0:
