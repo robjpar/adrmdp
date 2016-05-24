@@ -587,141 +587,30 @@ class ADRMDP(object):
             cbar.set_label(comp)
             plt.show()
 
-    def plot_conc_sect(self, comps=['u'], times=[0], interact=False):
+    def plot_conc_sect(self, comps=['u'], times=[0]):
         '''Plot sections of the concentration surface c(x, t) for specified
         times.
 
         comps=['u', 'v', 'm'] (default ['u'])
 
         e.g. times=[0, 2, 5] (default [0])
-
-        If interact=True, the parameters are being set interactively.
         '''
-        if interact is False:
-            x = self._x_grid * self._samp_len
-            for time in times:
-                for comp in comps:
-                    if comp == 'u':
-                        y = self._U_xt[np.argmax(self._t_grid >= time), :]
-                    if comp == 'v':
-                        y = self._V_xt[np.argmax(self._t_grid >= time), :]
-                    if comp == 'm':
-                        y = self._M_xt[np.argmax(self._t_grid >= time), :]
-                    plt.plot(x, y, label='%s, %s' % (comp, time))
-            plt.ylim(-0.1, 1.1)
-            plt.xlabel('x (nm)')
-            plt.ylabel('c')
-            plt.legend(loc='best')
-            plt.show()
+        x = self._x_grid * self._samp_len
 
-        if interact is True:
-            fig = plt.figure('interactive plot_conc_sect()', figsize=(10, 8))
-            plt.subplots_adjust(left=0.07, bottom=0.3, right=0.95, top=0.95,
-                                hspace=0.39)
-
-            ax = fig.add_subplot(211)
-            ax.set_xlabel('x (nm)')
-            ax.set_ylabel('c')
-            ax.set_title('Concentration vs. depth for given time')
-            ax.grid(True)
-            plt.axis([0, self._samp_len, 0, 1.1])
-
-            x = self._x_grid * self._samp_len
-            y = self._U_xt[0, :]
-            l0, = ax.plot(x, y, 'b', lw=2)
-            y = self._V_xt[0, :]
-            l1, = ax.plot(x, y, 'g', visible=False, lw=2)
-            y = self._M_xt[0, :]
-            l2, = ax.plot(x, y, 'r', visible=False, lw=2)
-
-            ax.plot(x, self._sampl_d_x, 'k--', lw=1.5, label='sampl_d')
-            l3, = ax.plot(x, self._d_term_x_u, 'b', lw=1, label='diff_u')
-            l4, = ax.plot(x, self._d_term_x_v, 'g', lw=1, label='diff_v')
-            if self._reac_type is not False:
-                ax.plot(x, self._r_term_x, 'c-.', lw=1, label='reac')
-            ax.legend(loc='best')
-            l4.set_visible(False)
-
-            for d, w in zip(self._l_depth_u, self._l_width_u):
-                plt.axvspan(d * self._samp_len, (d + w) * self._samp_len,
-                            color='blue', alpha=0.2)
-            for d, w in zip(self._l_depth_v, self._l_width_v):
-                plt.axvspan(d * self._samp_len, (d + w) * self._samp_len,
-                            color='green', alpha=0.2)
-
-            ax2 = fig.add_subplot(212)
-            ax2.set_xlabel('t (s)')
-            ax2.set_ylabel('c')
-            ax2.set_title('Concentration vs. time at the surface')
-            ax2.grid(True)
-            plt.axis([0, self._T, 0, 1.1])
-
-            x = self._t_grid
-            y = np.average(self._U_xt, axis=1, weights=self._sampl_d_x)
-            l5, = ax2.plot(x, y, 'b', lw=2, label='u')
-            y = np.average(self._V_xt, axis=1, weights=self._sampl_d_x)
-            l6, = ax2.plot(x, y, 'g', lw=2, label='v')
-            y = np.average(self._M_xt, axis=1, weights=self._sampl_d_x)
-            l7, = ax2.plot(x, y, 'r', lw=2, label='m')
-            ax2.legend(loc='best')
-            l6.set_visible(False)
-            l7.set_visible(False)
-
-            l8, = ax2.plot([0, 0], [0, 1.1], 'k--', lw=1.5)
-
-            for d, w in zip(self._l_depth_u, self._l_width_u):
-                plt.axvspan(d/abs(self._a_t.mean()),
-                            (d + w)/abs(self._a_t.mean()), color='blue',
-                            alpha=0.2)
-            for d, w in zip(self._l_depth_v, self._l_width_v):
-                plt.axvspan(d/abs(self._a_t.mean()),
-                            (d + w)/abs(self._a_t.mean()), color='green',
-                            alpha=0.2)
-
-            axS = plt.axes([0.13, 0.2, 0.77, 0.03])
-            self._sT = Slider(axS, 'time (s)', 0, self._T, valinit=0)
-
-            def update(val):
-                time = self._sT.val
-
-                time_ind = np.argmax(self._t_grid >= time)
-                y = self._U_xt[time_ind, :]
-                l0.set_ydata(y)
-                y = self._V_xt[time_ind, :]
-                l1.set_ydata(y)
-                y = self._M_xt[time_ind, :]
-                l2.set_ydata(y)
-
-                l8.set_xdata([time, time])
-
-                plt.draw()
-            self._sT.on_changed(update)
-
-            self._cursor = Cursor(ax, useblit=True, linestyle='--',
-                                  linewidth=1)
-            self._cursor2 = Cursor(ax2, useblit=True, linestyle='--',
-                                   linewidth=1)
-
-            axC = plt.axes([0.13, 0.012, 0.1, 0.15])
-            self._checkB = CheckButtons(axC, ('u', 'v', 'm'),
-                                        (True, False, False))
-
-            def func(label):
-                if label == 'u':
-                    l0.set_visible(not l0.get_visible())
-                    l3.set_visible(not l3.get_visible())
-                    l5.set_visible(not l5.get_visible())
-                elif label == 'v':
-                    l1.set_visible(not l1.get_visible())
-                    l4.set_visible(not l4.get_visible())
-                    l6.set_visible(not l6.get_visible())
-                elif label == 'm':
-                    l2.set_visible(not l2.get_visible())
-                    l7.set_visible(not l7.get_visible())
-                plt.draw()
-            self._checkB.on_clicked(func)
-
-            plt.show()
+        for time in times:
+            for comp in comps:
+                if comp == 'u':
+                    y = self._U_xt[np.argmax(self._t_grid >= time), :]
+                if comp == 'v':
+                    y = self._V_xt[np.argmax(self._t_grid >= time), :]
+                if comp == 'm':
+                    y = self._M_xt[np.argmax(self._t_grid >= time), :]
+                plt.plot(x, y, label='%s, %s' % (comp, time))
+        plt.ylim(-0.1, 1.1)
+        plt.xlabel('x (nm)')
+        plt.ylabel('c')
+        plt.legend(loc='best')
+        plt.show()
 
     def plot_depth_prof(self, comps=['u'], var='depth', comp_max=0.2):
         '''Plot depth profiles for specified components.
@@ -878,6 +767,117 @@ class ADRMDP(object):
                 median = x[k]
                 break
         print 'median: %g nm' % median
+
+    def plot_interact_pres(self):
+        '''Plot interactive presentation of the results of the model.
+        '''
+        fig = plt.figure('ADRM interactive presentation', figsize=(10, 8))
+        plt.subplots_adjust(left=0.07, bottom=0.3, right=0.95, top=0.95,
+                            hspace=0.39)
+
+        ax = fig.add_subplot(211)
+        ax.set_xlabel('x (nm)')
+        ax.set_ylabel('c')
+        ax.set_title('Concentration vs. depth for given time')
+        ax.grid(True)
+        plt.axis([0, self._samp_len, 0, 1.1])
+
+        x = self._x_grid * self._samp_len
+        y = self._U_xt[0, :]
+        l0, = ax.plot(x, y, 'b', lw=2)
+        y = self._V_xt[0, :]
+        l1, = ax.plot(x, y, 'g', visible=False, lw=2)
+        y = self._M_xt[0, :]
+        l2, = ax.plot(x, y, 'r', visible=False, lw=2)
+
+        ax.plot(x, self._sampl_d_x, 'k--', lw=1.5, label='sampl_d')
+        l3, = ax.plot(x, self._d_term_x_u, 'b', lw=1, label='diff_u')
+        l4, = ax.plot(x, self._d_term_x_v, 'g', lw=1, label='diff_v')
+        if self._reac_type is not False:
+            ax.plot(x, self._r_term_x, 'c-.', lw=1, label='reac')
+        ax.legend(loc='best')
+        l4.set_visible(False)
+
+        for d, w in zip(self._l_depth_u, self._l_width_u):
+            plt.axvspan(d * self._samp_len, (d + w) * self._samp_len,
+                        color='blue', alpha=0.2)
+        for d, w in zip(self._l_depth_v, self._l_width_v):
+            plt.axvspan(d * self._samp_len, (d + w) * self._samp_len,
+                        color='green', alpha=0.2)
+
+        ax2 = fig.add_subplot(212)
+        ax2.set_xlabel('t (s)')
+        ax2.set_ylabel('c')
+        ax2.set_title('Concentration vs. time at the surface')
+        ax2.grid(True)
+        plt.axis([0, self._T, 0, 1.1])
+
+        x = self._t_grid
+        y = np.average(self._U_xt, axis=1, weights=self._sampl_d_x)
+        l5, = ax2.plot(x, y, 'b', lw=2, label='u')
+        y = np.average(self._V_xt, axis=1, weights=self._sampl_d_x)
+        l6, = ax2.plot(x, y, 'g', lw=2, label='v')
+        y = np.average(self._M_xt, axis=1, weights=self._sampl_d_x)
+        l7, = ax2.plot(x, y, 'r', lw=2, label='m')
+        ax2.legend(loc='best')
+        l6.set_visible(False)
+        l7.set_visible(False)
+
+        l8, = ax2.plot([0, 0], [0, 1.1], 'k--', lw=1.5)
+
+        for d, w in zip(self._l_depth_u, self._l_width_u):
+            plt.axvspan(d/abs(self._a_t.mean()),
+                        (d + w)/abs(self._a_t.mean()), color='blue',
+                        alpha=0.2)
+        for d, w in zip(self._l_depth_v, self._l_width_v):
+            plt.axvspan(d/abs(self._a_t.mean()),
+                        (d + w)/abs(self._a_t.mean()), color='green',
+                        alpha=0.2)
+
+        axS = plt.axes([0.13, 0.2, 0.77, 0.03])
+        self._sT = Slider(axS, 'time (s)', 0, self._T, valinit=0)
+
+        def update(val):
+            time = self._sT.val
+
+            time_ind = np.argmax(self._t_grid >= time)
+            y = self._U_xt[time_ind, :]
+            l0.set_ydata(y)
+            y = self._V_xt[time_ind, :]
+            l1.set_ydata(y)
+            y = self._M_xt[time_ind, :]
+            l2.set_ydata(y)
+
+            l8.set_xdata([time, time])
+
+            plt.draw()
+        self._sT.on_changed(update)
+
+        self._cursor = Cursor(ax, useblit=True, linestyle='--',
+                              linewidth=1)
+        self._cursor2 = Cursor(ax2, useblit=True, linestyle='--',
+                               linewidth=1)
+
+        axC = plt.axes([0.13, 0.012, 0.1, 0.15])
+        self._checkB = CheckButtons(axC, ('u', 'v', 'm'),
+                                    (True, False, False))
+
+        def func(label):
+            if label == 'u':
+                l0.set_visible(not l0.get_visible())
+                l3.set_visible(not l3.get_visible())
+                l5.set_visible(not l5.get_visible())
+            elif label == 'v':
+                l1.set_visible(not l1.get_visible())
+                l4.set_visible(not l4.get_visible())
+                l6.set_visible(not l6.get_visible())
+            elif label == 'm':
+                l2.set_visible(not l2.get_visible())
+                l7.set_visible(not l7.get_visible())
+            plt.draw()
+        self._checkB.on_clicked(func)
+
+        plt.show()
 # =============================================================================
 
 
