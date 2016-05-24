@@ -29,7 +29,7 @@ class ADRMDP(object):
         time: float
             Real time requested (s) (default 4.5)
         n_t_steps: int
-            Number of time steps. Meaningful only if num_meth='cn'
+            Number of time steps. Used only if num_meth='cn'
             (default 500)
         num_meth: str
             Numerical method 'cn' | 'os'. If 'cn', the Crank-Nicholson
@@ -106,7 +106,8 @@ class ADRMDP(object):
             Inflection point of the reaction term sigmoid
             (default diff_x_infl_u)
         model_calc: bool
-            Perform calculations? (default True)
+            Perform calculations on instance creation? If False, the method
+            calc_model() has to be invoked manually (default True)
 
         Example
         -------
@@ -638,16 +639,13 @@ class ADRMDP(object):
                 ax.plot(x, self._r_term_x, 'c-.', lw=1, label='reac')
             ax.legend(loc='best')
             l4.set_visible(False)
-            
-            for d, w in zip(self._l_depth_u, self._l_width_u):
-                plt.axvspan(d * self._samp_len,
-                                    (d + w) * self._samp_len, color='blue',
-                                    alpha=0.2)
-            for d, w in zip(self._l_depth_v, self._l_width_v):
-                plt.axvspan(d * self._samp_len,
-                                    (d + w) * self._samp_len, color='green',
-                                    alpha=0.2)
 
+            for d, w in zip(self._l_depth_u, self._l_width_u):
+                plt.axvspan(d * self._samp_len, (d + w) * self._samp_len,
+                            color='blue', alpha=0.2)
+            for d, w in zip(self._l_depth_v, self._l_width_v):
+                plt.axvspan(d * self._samp_len, (d + w) * self._samp_len,
+                            color='green', alpha=0.2)
 
             axS = plt.axes([0.13, 0.2, 0.77, 0.03])
             self._sT = Slider(axS, 'time (s)', 0, self._T, valinit=0)
