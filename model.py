@@ -780,7 +780,7 @@ class ADRMDP(object):
         ax.set_ylabel('c')
         ax.set_title('Concentration vs. depth for given time')
         ax.grid(True)
-        plt.axis([0, self._samp_len, 0, 1.1])
+        plt.axis([0, self._samp_len, -0.05, 1.05])
 
         x = self._x_grid * self._samp_len
         y = self._U_xt[0, :]
@@ -810,7 +810,7 @@ class ADRMDP(object):
         ax2.set_ylabel('c')
         ax2.set_title('Concentration vs. time at the surface')
         ax2.grid(True)
-        plt.axis([0, self._T, 0, 1.1])
+        plt.axis([0, self._T, -0.05, 1.05])
 
         x = self._t_grid
         y = np.average(self._U_xt, axis=1, weights=self._sampl_d_x)
