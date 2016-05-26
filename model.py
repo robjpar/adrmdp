@@ -75,7 +75,7 @@ class ADRMDP(object):
             (default 3.5)
         diff_const_u: float
             Constant component of the total diffusivity for component u
-            (nm^2/s) (default 0.08)
+            (nm^2/s) (default 0.08 if num_meth='cn', 0 if num_meth='os')
         l_depth_v: list of floats
             Layers of component v (nm) (default [])
         l_width_v: list of floats
