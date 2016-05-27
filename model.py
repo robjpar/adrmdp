@@ -526,6 +526,30 @@ class ADRMDP(object):
         print 'done'
     # =========================================================================
 
+    def plot_vel(self, comps=['u']):
+        '''Plot velocities for specified componets.
+
+        comps=['u', 'v', 'm'] (default ['u'])
+        '''
+        x_pos = []
+        x_labs = []
+        vels = []
+        for i, comp in enumerate(comps, 1):
+            x_pos.append(i)
+            if comp == 'u':
+                x_labs.append('u')
+                vels.append(abs(self._a_u * self._samp_len))
+            if comp == 'v':
+                x_labs.append('v')
+                vels.append(abs(self._a_v * self._samp_len))
+            if comp == 'm':
+                x_labs.append('m')
+                vels.append(abs(self._a_m * self._samp_len))
+        plt.bar(x_pos, vels, align='center')
+        plt.xticks(x_pos, x_labs)
+        plt.ylabel('vel')
+        plt.show()
+
     def plot_sampl_d(self):
         '''Plot sampling depth sigmoid.'''
         plt.plot(self._x_grid * self._samp_len, self._sampl_d_x)
@@ -879,6 +903,38 @@ class ADRMDP(object):
 
         plt.show()
 # =============================================================================
+
+
+def comp_vel(*args, **kwargs):
+    '''Compare velocities.
+
+    e.g. args=m1, m2,...
+
+    kwargs
+    ------
+    comp:
+        'u' | 'v' | 'm' (default 'u')
+    '''
+    comp = kwargs.get('comp', 'u')
+    x_pos = []
+    vels = []
+    for i, m in enumerate(args, 1):
+        x_pos.append(i)
+        if comp == 'u':
+            vels.append(abs(m._a_u * m._samp_len))
+        if comp == 'v':
+            vels.append(abs(m._a_v * m._samp_len))
+        if comp == 'm':
+            vels.append(abs(m._a_m * m._samp_len))
+    plt.bar(x_pos, vels, align='center')
+    plt.xticks(x_pos)
+    if comp == 'u':
+        plt.ylabel('vel$_u$')
+    if comp == 'v':
+        plt.ylabel('vel$_v$')
+    if comp == 'm':
+        plt.ylabel('vel$_m$')
+    plt.show()
 
 
 def comp_sampl_d(*args):
