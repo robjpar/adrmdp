@@ -942,9 +942,8 @@ def comp_sampl_d(*args):
 
     e.g. args=m1, m2,...
     '''
-    m1 = args[0]
-    x = m1._x_grid * m1._samp_len
     for i, m in enumerate(args):
+        x = m._x_grid * m._samp_len
         plt.plot(x, m._sampl_d_x, label=i + 1)
     plt.xlabel('x (nm)')
     plt.ylabel('s$_S$(x)')
@@ -963,9 +962,8 @@ def comp_diff(*args, **kwargs):
         'u' | 'v' | 'm' (default 'u')
     '''
     comp = kwargs.get('comp', 'u')
-    m1 = args[0]
-    x = m1._x_grid * m1._samp_len
     for i, m in enumerate(args):
+        x = m._x_grid * m._samp_len
         if comp == 'u':
             y = m._d_term_total_u * m._samp_len**2
         if comp == 'v':
@@ -994,9 +992,8 @@ def comp_depth_prof(*args, **kwargs):
     '''
     comp = kwargs.get('comp', 'u')
     comp_max = kwargs.get('comp_max', 0.2)
-    m1 = args[0]
-    x = m1._t_grid * abs(m1._a_t) * m1._samp_len  # t -> x (nm)
     for i, m in enumerate(args):
+        x = m._t_grid * abs(m._a_t) * m._samp_len  # t -> x (nm)
         if comp == 'u':
             # u(t, x ~ 0)
             y = np.average(m._U_xt, axis=1, weights=m._sampl_d_x)
@@ -1010,12 +1007,12 @@ def comp_depth_prof(*args, **kwargs):
         col = plt.plot(x, y, label=i + 1)[0].get_color()
         if i == 0:
             if comp == 'u':
-                for d, w in zip(m1._l_depth_u, m1._l_width_u):
-                    plt.axvspan(d * m1._samp_len, (d + w) * m1._samp_len,
+                for d, w in zip(m._l_depth_u, m._l_width_u):
+                    plt.axvspan(d * m._samp_len, (d + w) * m._samp_len,
                                 color=col, alpha=0.2)
             if comp == 'v':
-                for d, w in zip(m1._l_depth_v, m1._l_width_v):
-                    plt.axvspan(d * m1._samp_len, (d + w) * m1._samp_len,
+                for d, w in zip(m._l_depth_v, m._l_width_v):
+                    plt.axvspan(d * m._samp_len, (d + w) * m._samp_len,
                                 color=col, alpha=0.2)
     if comp == 'm':
         plt.ylim(0, 1.1)
