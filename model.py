@@ -52,6 +52,9 @@ class ADRMDP(object):
         sampl_depth: str
             Shape of the sampling depth depth dependence 'surf' | 'sigm'
             (default 'sigmoid')
+        sampl_d_ampl: float
+            If sampl_depth='sigm', this parameter denotes the magnitude of the
+            sampling depth sigmoid (n_at, n_mol) (default 1)
         sampl_d_slope: float
             If sampl_depth='sigm', this parameter denotes the slope of the
             sampling depth sigmoid (1/nm) (default 1.7)
@@ -132,6 +135,7 @@ class ADRMDP(object):
 
         sampl_depth = kwargs.get('sampl_depth', 'sigm')
         if sampl_depth == 'sigm':
+            sampl_d_ampl = kwargs.get('sampl_d_ampl', 1)  # (n_at, n_mol)
             sampl_d_slope = kwargs.get('sampl_d_slope', 1.7)  # (1/nm)
             sampl_d_infl = kwargs.get('sampl_d_infl', 2.2)  # (nm)
 
@@ -211,7 +215,8 @@ class ADRMDP(object):
             self._sampl_d_x = np.zeros(self._J)
             self._sampl_d_x[0] = 1
         if sampl_depth == 'sigm':
-            self._sampl_d_x = self._get_sigm_fun(sampl_d_infl, sampl_d_slope)
+            self._sampl_d_x = self._get_sigm_fun(sampl_d_infl, sampl_d_slope,
+                                                 sampl_d_ampl)
 
         self._d_term_x_u = self._get_sigm_fun(diff_x_infl_u, diff_slope_u)
         self._d_term_x_v = self._get_sigm_fun(diff_x_infl_v, diff_slope_v)
@@ -554,7 +559,7 @@ class ADRMDP(object):
         '''Plot sampling depth sigmoid.'''
         plt.plot(self._x_grid * self._samp_len, self._sampl_d_x)
         plt.xlabel('x (nm)')
-        plt.ylabel('s$_S$(x)')
+        plt.ylabel('S(x) (n$_{at}$, n$_{mol}$)')
         plt.show()
 
     def plot_diff(self, comps=['u']):
@@ -946,7 +951,7 @@ def comp_sampl_d(*args):
         x = m._x_grid * m._samp_len
         plt.plot(x, m._sampl_d_x, label=i + 1)
     plt.xlabel('x (nm)')
-    plt.ylabel('s$_S$(x)')
+    plt.ylabel('S(x) (n$_{at}$, n$_{mol}$)')
     plt.legend(loc='best')
     plt.show()
 
