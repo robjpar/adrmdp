@@ -552,7 +552,7 @@ class ADRMDP(object):
                 vels.append(abs(self._a_m * self._samp_len))
         plt.bar(x_pos, vels, align='center')
         plt.xticks(x_pos, x_labs)
-        plt.ylabel('vel')
+        plt.ylabel('vel (nm/s)')
         plt.show()
 
     def plot_sampl_d(self):
@@ -934,11 +934,11 @@ def comp_vel(*args, **kwargs):
     plt.bar(x_pos, vels, align='center')
     plt.xticks(x_pos)
     if comp == 'u':
-        plt.ylabel('vel$_u$')
+        plt.ylabel('vel$_u$ (nm/s)')
     if comp == 'v':
-        plt.ylabel('vel$_v$')
+        plt.ylabel('vel$_v$ (nm/s)')
     if comp == 'm':
-        plt.ylabel('vel$_m$')
+        plt.ylabel('vel$_m$ (nm/s)')
     plt.show()
 
 
