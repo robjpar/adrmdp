@@ -205,10 +205,10 @@ class ADRMDP(object):
         diff_u_const = diff_const_u/self._samp_len**2  # (1/s)
         diff_v_const = diff_const_v/self._samp_len**2  # (1/s)
 
-        self._dx = L/(self._J - 1)
+        self._dx = L/(self._J - 1)  # (1)
         self._x_grid = np.array([j * self._dx for j in range(self._J)])
 
-        self._dt = self._T/(self._N - 1)
+        self._dt = self._T/(self._N - 1)  # (s)
         self._t_grid = np.zeros(1)
 
         if sampl_depth == 'surf':
