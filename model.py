@@ -651,7 +651,13 @@ class ADRMDP(object):
         e.g. comp_max=1.1 (default 0.2)
         '''
         if var == 'depth':
-            x = self._t_grid * abs(self._a_t) * self._samp_len  # t -> x (nm)
+            if self._num_meth == 'cn':
+                x = self._t_grid * abs(self._a_t) * self._samp_len
+                # t -> x (nm)
+            if self._num_meth == 'os':
+                x = np.array([i * self._dx * self._samp_len for
+                              i in range(self._t_grid.shape[0])]) \
+                              # t -> x (nm)
         if var == 'time':
             x = self._t_grid
 
@@ -681,16 +687,35 @@ class ADRMDP(object):
                 plt.xlabel('x (nm)')
 
             if var == 'time':
-                if comp == 'u':
-                    for d, w in zip(self._l_depth_u, self._l_width_u):
-                        plt.axvspan(d/abs(self._a_t.mean()),
-                                    (d + w)/abs(self._a_t.mean()),
-                                    color=col, alpha=0.2)
-                if comp == 'v':
-                    for d, w in zip(self._l_depth_v, self._l_width_v):
-                        plt.axvspan(d/abs(self._a_t.mean()),
-                                    (d + w)/abs(self._a_t.mean()),
-                                    color=col, alpha=0.2)
+                if self._num_meth == 'cn':
+                    if comp == 'u':
+                        for d, w in zip(self._l_depth_u, self._l_width_u):
+                            plt.axvspan(d/abs(self._a_t.mean()),
+                                        (d + w)/abs(self._a_t.mean()),
+                                        color=col, alpha=0.2)
+                    if comp == 'v':
+                        for d, w in zip(self._l_depth_v, self._l_width_v):
+                            plt.axvspan(d/abs(self._a_t.mean()),
+                                        (d + w)/abs(self._a_t.mean()),
+                                        color=col, alpha=0.2)
+
+                if self._num_meth == 'os':
+                    depth = np.array([i * self._dx for i in
+                                     range(self._t_grid.shape[0])]) \
+                        # t -> x (1)
+                    if comp == 'u':
+                        for d, w in zip(self._l_depth_u, self._l_width_u):
+                            t_d = self._t_grid[np.argmax(depth >= d)]
+                            t_dw = self._t_grid[np.argmax(depth >= d + w)]
+
+                            plt.axvspan(t_d, t_dw, color=col, alpha=0.2)
+                    if comp == 'v':
+                        for d, w in zip(self._l_depth_v, self._l_width_v):
+                            t_d = self._t_grid[np.argmax(depth >= d)]
+                            t_dw = self._t_grid[np.argmax(depth >= d + w)]
+
+                            plt.axvspan(t_d, t_dw, color=col, alpha=0.2)
+
                 plt.xlabel('t (s)')
         plt.ylabel('c')
         if 'm' in comps:
@@ -997,8 +1022,14 @@ def comp_depth_prof(*args, **kwargs):
     '''
     comp = kwargs.get('comp', 'u')
     comp_max = kwargs.get('comp_max', 0.2)
-    for i, m in enumerate(args):
-        x = m._t_grid * abs(m._a_t) * m._samp_len  # t -> x (nm)
+    for n, m in enumerate(args):
+        if m._num_meth == 'cn':
+            x = m._t_grid * abs(m._a_t) * m._samp_len  # t -> x (nm)
+
+        if m._num_meth == 'os':
+            x = np.array([i * m._dx * m._samp_len for
+                         i in range(m._t_grid.shape[0])])  # t -> x (nm)
+
         if comp == 'u':
             # u(t, x ~ 0)
             y = np.average(m._U_xt, axis=1, weights=m._sampl_d_x)
@@ -1009,8 +1040,8 @@ def comp_depth_prof(*args, **kwargs):
             # m(t, x ~ 0)
             y = np.average(m._M_xt, axis=1, weights=m._sampl_d_x)
 
-        col = plt.plot(x, y, label=i + 1)[0].get_color()
-        if i == 0:
+        col = plt.plot(x, y, label=n + 1)[0].get_color()
+        if n == 0:
             if comp == 'u':
                 for d, w in zip(m._l_depth_u, m._l_width_u):
                     plt.axvspan(d * m._samp_len, (d + w) * m._samp_len,
