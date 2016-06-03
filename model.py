@@ -28,14 +28,6 @@ class ADRMDP(object):
             Number of space steps (default 500)
         time: float
             Real time requested (s) (default 4.5)
-        n_t_steps: int
-            Number of time steps. Used only if num_meth='cn'
-            (default 500)
-        num_meth: str
-            Numerical method 'cn' | 'os'. If 'cn', the Crank-Nicholson
-            algorythm is used to solve the whole equation. If 'os', the
-            opertor splitting approach is used and the analytical solution of
-            the advection term is utilized (default 'os')
         bound_cond: str
             Boundary condition 'dirichlet' | 'neumann' | 'robin'
             (default 'neumann')
@@ -78,7 +70,7 @@ class ADRMDP(object):
             (default 3.5)
         diff_const_u: float
             Constant component of the total diffusivity for component u
-            (nm^2/s) (default 0.08 if num_meth='cn', 0 if num_meth='os')
+            (nm^2/s) (default 0)
         l_depth_v: list of floats
             Layers of component v (nm) (default [])
         l_width_v: list of floats
@@ -122,9 +114,6 @@ class ADRMDP(object):
         n_x_steps = kwargs.get('n_x_steps', 500)
 
         time = kwargs.get('time', 4.5)  # (s)
-        n_t_steps = kwargs.get('n_t_steps', 500)
-
-        self._num_meth = kwargs.get('num_meth', 'os')
 
         self._bound_cond = kwargs.get('bound_cond', 'neumann')
         if self._bound_cond == 'dirichlet':
@@ -145,11 +134,8 @@ class ADRMDP(object):
         diff_ampl_u = kwargs.get('diff_ampl_u', 18)  # (nm^2/s)
         diff_slope_u = kwargs.get('diff_slope_u', 0.7)  # (1/nm)
         diff_x_infl_u = kwargs.get('diff_x_infl_u', 3.5)  # (nm)
-        if self._num_meth == 'cn':
-            diff_const_u = kwargs.get('diff_const_u', 0.08)  # (nm^2/s)
-            # small positive value needed for numerical stability
-        if self._num_meth == 'os':
-            diff_const_u = kwargs.get('diff_const_u', 0)  # (nm^2/s)
+
+        diff_const_u = kwargs.get('diff_const_u', 0)  # (nm^2/s)
 
         l_depth_v = kwargs.get('l_depth_v', [])  # (nm)
         l_width_v = kwargs.get('l_width_v', [])  # (nm)
@@ -175,7 +161,6 @@ class ADRMDP(object):
         self._J = n_x_steps  # dx = L/(J - 1)
 
         self._T = time  # (s)
-        self._N = n_t_steps  # dt = T/(N - 1)
 
         self._interf_slope = interf_slope/(1/self._samp_len)  # (1)
 
@@ -208,7 +193,6 @@ class ADRMDP(object):
         self._dx = L/(self._J - 1)  # (1)
         self._x_grid = np.array([j * self._dx for j in range(self._J)])
 
-        self._dt = self._T/(self._N - 1)  # (s)
         self._t_grid = np.zeros(1)
 
         if sampl_depth == 'surf':
@@ -335,22 +319,13 @@ class ADRMDP(object):
         else:
             a = self._a_u * u_surf + self._a_v * v_surf + self._a_m * m_surf
 
-        if self._num_meth == 'os':
-            self._dt = self._dx/abs(a)
+        self._dt = self._dx/abs(a)
 
         sigma_u = (self._d_term_total_u * self._dt)/(2 * self._dx**2)
         sigma_v = (self._d_term_total_v * self._dt)/(2 * self._dx**2)
 
-        if self._num_meth == 'cn':
-            rho_u = ((self._d_term_total_u_deriv - a) * self._dt) / \
-                (4 * self._dx)
-            rho_v = ((self._d_term_total_v_deriv - a) * self._dt) / \
-                (4 * self._dx)
-        if self._num_meth == 'os':
-            rho_u = (self._d_term_total_u_deriv * self._dt) / \
-                (4 * self._dx)
-            rho_v = (self._d_term_total_v_deriv * self._dt) / \
-                (4 * self._dx)
+        rho_u = (self._d_term_total_u_deriv * self._dt) / (4 * self._dx)
+        rho_v = (self._d_term_total_v_deriv * self._dt) / (4 * self._dx)
 
         # Dirichlet boundary condition
         self._A_u = np.diagflat(-(sigma_u[: -1] + rho_u[: -1]), 1) + \
@@ -475,37 +450,36 @@ class ADRMDP(object):
                                     self._r_term_v * self._dt +
                                     self._dirich_term_v)
 
-            if self._num_meth == 'os':
-                if a < 0:
-                    if self._bound_cond == 'dirichlet':
-                        alpha_u = self._alpha_u[1]
-                        alpha_v = self._alpha_v[1]
-                    if self._bound_cond == 'neumann':
-                        alpha_u = U_new[-2]
-                        alpha_v = V_new[-2]
-                    if self._bound_cond == 'robin':
-                        alpha_u = U_new[-2] + 2 * self._dx * a * U_new[-1] / \
-                            self._d_term_total_u[-1]
-                        alpha_v = V_new[-2] + 2 * self._dx * a * V_new[-1] / \
-                            self._d_term_total_v[-1]
+            if a < 0:
+                if self._bound_cond == 'dirichlet':
+                    alpha_u = self._alpha_u[1]
+                    alpha_v = self._alpha_v[1]
+                if self._bound_cond == 'neumann':
+                    alpha_u = U_new[-2]
+                    alpha_v = V_new[-2]
+                if self._bound_cond == 'robin':
+                    alpha_u = U_new[-2] + 2 * self._dx * a * U_new[-1] / \
+                        self._d_term_total_u[-1]
+                    alpha_v = V_new[-2] + 2 * self._dx * a * V_new[-1] / \
+                        self._d_term_total_v[-1]
 
-                    U_new = np.concatenate((U_new[1:], [alpha_u]))
-                    V_new = np.concatenate((V_new[1:], [alpha_v]))
+                U_new = np.concatenate((U_new[1:], [alpha_u]))
+                V_new = np.concatenate((V_new[1:], [alpha_v]))
 
-                if a > 0:
-                    if self._bound_cond == 'dirichlet':
-                        alpha_u = self._alpha_u[0]
-                        alpha_v = self._alpha_v[0]
-                    if self._bound_cond == 'neumann':
-                        alpha_u = U_new[1]
-                        alpha_v = V_new[1]
-                    if self._bound_cond == 'robin':
-                        alpha_u = U_new[1] - 2 * self._dx * a * U_new[0] / \
-                            self._d_term_total_u[0]
-                        alpha_v = V_new[1] - 2 * self._dx * a * V_new[0] / \
-                            self._d_term_total_v[0]
-                    U_new = np.concatenate(([alpha_u], U_new[: -1]))
-                    V_new = np.concatenate(([alpha_v], V_new[: -1]))
+            if a > 0:
+                if self._bound_cond == 'dirichlet':
+                    alpha_u = self._alpha_u[0]
+                    alpha_v = self._alpha_v[0]
+                if self._bound_cond == 'neumann':
+                    alpha_u = U_new[1]
+                    alpha_v = V_new[1]
+                if self._bound_cond == 'robin':
+                    alpha_u = U_new[1] - 2 * self._dx * a * U_new[0] / \
+                        self._d_term_total_u[0]
+                    alpha_v = V_new[1] - 2 * self._dx * a * V_new[0] / \
+                        self._d_term_total_v[0]
+                U_new = np.concatenate(([alpha_u], U_new[: -1]))
+                V_new = np.concatenate(([alpha_v], V_new[: -1]))
 
             if self._t_grid[-1] >= self._T:
                 break
@@ -651,13 +625,8 @@ class ADRMDP(object):
         e.g. comp_max=1.1 (default 0.2)
         '''
         if var == 'depth':
-            if self._num_meth == 'cn':
-                x = self._t_grid * abs(self._a_t) * self._samp_len
-                # t -> x (nm)
-            if self._num_meth == 'os':
-                x = np.array([i * self._dx * self._samp_len for
-                              i in range(self._t_grid.shape[0])]) \
-                              # t -> x (nm)
+            x = np.array([i * self._dx * self._samp_len for
+                          i in range(self._t_grid.shape[0])])  # t -> x (nm)
         if var == 'time':
             x = self._t_grid
 
@@ -687,34 +656,21 @@ class ADRMDP(object):
                 plt.xlabel('x (nm)')
 
             if var == 'time':
-                if self._num_meth == 'cn':
-                    if comp == 'u':
-                        for d, w in zip(self._l_depth_u, self._l_width_u):
-                            plt.axvspan(d/abs(self._a_t.mean()),
-                                        (d + w)/abs(self._a_t.mean()),
-                                        color=col, alpha=0.2)
-                    if comp == 'v':
-                        for d, w in zip(self._l_depth_v, self._l_width_v):
-                            plt.axvspan(d/abs(self._a_t.mean()),
-                                        (d + w)/abs(self._a_t.mean()),
-                                        color=col, alpha=0.2)
+                depth = np.array([i * self._dx for i in
+                                 range(self._t_grid.shape[0])]) \
+                    # t -> x (1)
+                if comp == 'u':
+                    for d, w in zip(self._l_depth_u, self._l_width_u):
+                        t_d = self._t_grid[np.argmax(depth >= d)]
+                        t_dw = self._t_grid[np.argmax(depth >= d + w)]
 
-                if self._num_meth == 'os':
-                    depth = np.array([i * self._dx for i in
-                                     range(self._t_grid.shape[0])]) \
-                        # t -> x (1)
-                    if comp == 'u':
-                        for d, w in zip(self._l_depth_u, self._l_width_u):
-                            t_d = self._t_grid[np.argmax(depth >= d)]
-                            t_dw = self._t_grid[np.argmax(depth >= d + w)]
+                        plt.axvspan(t_d, t_dw, color=col, alpha=0.2)
+                if comp == 'v':
+                    for d, w in zip(self._l_depth_v, self._l_width_v):
+                        t_d = self._t_grid[np.argmax(depth >= d)]
+                        t_dw = self._t_grid[np.argmax(depth >= d + w)]
 
-                            plt.axvspan(t_d, t_dw, color=col, alpha=0.2)
-                    if comp == 'v':
-                        for d, w in zip(self._l_depth_v, self._l_width_v):
-                            t_d = self._t_grid[np.argmax(depth >= d)]
-                            t_dw = self._t_grid[np.argmax(depth >= d + w)]
-
-                            plt.axvspan(t_d, t_dw, color=col, alpha=0.2)
+                        plt.axvspan(t_d, t_dw, color=col, alpha=0.2)
 
                 plt.xlabel('t (s)')
         plt.ylabel('c')
@@ -1023,12 +979,8 @@ def comp_depth_prof(*args, **kwargs):
     comp = kwargs.get('comp', 'u')
     comp_max = kwargs.get('comp_max', 0.2)
     for n, m in enumerate(args):
-        if m._num_meth == 'cn':
-            x = m._t_grid * abs(m._a_t) * m._samp_len  # t -> x (nm)
-
-        if m._num_meth == 'os':
-            x = np.array([i * m._dx * m._samp_len for
-                         i in range(m._t_grid.shape[0])])  # t -> x (nm)
+        x = np.array([i * m._dx * m._samp_len for
+                      i in range(m._t_grid.shape[0])])  # t -> x (nm)
 
         if comp == 'u':
             # u(t, x ~ 0)
