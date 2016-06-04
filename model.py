@@ -582,7 +582,7 @@ class ADRMDP(object):
 
         if comp == 'm' and np.any(self._M_xt < 0):
             y = self._M_xt
-            heatmap = plt.pcolormesh(x, t, y, vmin=-0.5, vmax=0,
+            heatmap = plt.pcolormesh(x, t, y, vmin=-1, vmax=0,
                                      cmap=cm.Greys_r)
             plt.xlabel('x (nm)')
             plt.ylabel('t (s)')
