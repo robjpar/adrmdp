@@ -515,15 +515,14 @@ class ADRMDP(object):
         vels = []
         for i, comp in enumerate(comps, 1):
             x_pos.append(i)
+            x_labs.append(comp)
             if comp == 'u':
-                x_labs.append('u')
-                vels.append(abs(self._a_u * self._samp_len))
+                a = self._a_u
             if comp == 'v':
-                x_labs.append('v')
-                vels.append(abs(self._a_v * self._samp_len))
+                a = self._a_v
             if comp == 'm':
-                x_labs.append('m')
-                vels.append(abs(self._a_m * self._samp_len))
+                a = self._a_m
+            vels.append(abs(a * self._samp_len))
         plt.bar(x_pos, vels, align='center')
         plt.xticks(x_pos, x_labs)
         plt.ylabel('vel (nm/s)')
@@ -907,19 +906,21 @@ def comp_vel(*args, **kwargs):
     for i, m in enumerate(args, 1):
         x_pos.append(i)
         if comp == 'u':
-            vels.append(abs(m._a_u * m._samp_len))
+            a = m._a_u
         if comp == 'v':
-            vels.append(abs(m._a_v * m._samp_len))
+            a = m._a_v
         if comp == 'm':
-            vels.append(abs(m._a_m * m._samp_len))
+            a = m._a_m
+        vels.append(abs(a * m._samp_len))
     plt.bar(x_pos, vels, align='center')
     plt.xticks(x_pos)
     if comp == 'u':
-        plt.ylabel('vel$_u$ (nm/s)')
+        label = 'vel$_u$ (nm/s)'
     if comp == 'v':
-        plt.ylabel('vel$_v$ (nm/s)')
+        label = 'vel$_v$ (nm/s)'
     if comp == 'm':
-        plt.ylabel('vel$_m$ (nm/s)')
+        label = 'vel$_m$ (nm/s)'
+    plt.ylabel(label)
     plt.show()
 
 
