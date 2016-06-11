@@ -601,12 +601,13 @@ class ADRMDP(object):
 
         for time in times:
             for comp in comps:
+                index = np.argmax(self._t_grid >= time)
                 if comp == 'u':
-                    y = self._U_xt[np.argmax(self._t_grid >= time), :]
+                    y = self._U_xt[index, :]
                 if comp == 'v':
-                    y = self._V_xt[np.argmax(self._t_grid >= time), :]
+                    y = self._V_xt[index, :]
                 if comp == 'm':
-                    y = self._M_xt[np.argmax(self._t_grid >= time), :]
+                    y = self._M_xt[index, :]
                 plt.plot(x, y, label='%s, %s' % (comp, time))
         plt.ylim(-0.1, 1.1)
         plt.xlabel('x (nm)')
@@ -632,13 +633,14 @@ class ADRMDP(object):
         for comp in comps:
             if comp == 'u':
                 # u(t, x ~ 0)
-                y = np.average(self._U_xt, axis=1, weights=self._sampl_d_x)
+                mat = self._U_xt
             if comp == 'v':
                 # v(t, x ~ 0)
-                y = np.average(self._V_xt, axis=1, weights=self._sampl_d_x)
+                mat = self._V_xt
             if comp == 'm':
                 # m(t, x ~ 0)
-                y = np.average(self._M_xt, axis=1, weights=self._sampl_d_x)
+                mat = self._M_xt
+            y = np.average(mat, axis=1, weights=self._sampl_d_x)
             col = plt.plot(x, y, label=comp)[0].get_color()
 
             if var == 'depth':
@@ -688,13 +690,14 @@ class ADRMDP(object):
         x = self._t_grid * abs(self._a_t) * self._samp_len  # t -> x (nm)
         if comp == 'u':
             # u(t, x ~ 0)
-            y = np.average(self._U_xt, axis=1, weights=self._sampl_d_x)
+            mat = self._U_xt
         if comp == 'v':
             # v(t, x ~ 0)
-            y = np.average(self._V_xt, axis=1, weights=self._sampl_d_x)
+            mat = self._V_xt
         if comp == 'm':
             # m(t, x ~ 0)
-            y = np.average(self._M_xt, axis=1, weights=self._sampl_d_x)
+            mat = self._M_xt
+        y = np.average(mat, axis=1, weights=self._sampl_d_x)
 
         integral = scipy.integrate.simps(y, x=x)
         print 'integral: %g nm' % integral
@@ -958,9 +961,10 @@ def comp_diff(*args, **kwargs):
         plt.plot(x, y, label=i + 1)
     plt.xlabel('x (nm)')
     if comp == 'u':
-        plt.ylabel('D$_u$(x) (nm$^2$/s)')
+        label = 'D$_u$(x) (nm$^2$/s)'
     if comp == 'v':
-        plt.ylabel('D$_v$(x) (nm$^2$/s)')
+        label = 'D$_v$(x) (nm$^2$/s)'
+    plt.ylabel(label)
     plt.legend(loc='best')
     plt.show()
 
@@ -985,13 +989,14 @@ def comp_depth_prof(*args, **kwargs):
 
         if comp == 'u':
             # u(t, x ~ 0)
-            y = np.average(m._U_xt, axis=1, weights=m._sampl_d_x)
+            mat = m._U_xt
         if comp == 'v':
             # v(t, x ~ 0)
-            y = np.average(m._V_xt, axis=1, weights=m._sampl_d_x)
+            mat = m._V_xt
         if comp == 'm':
             # m(t, x ~ 0)
-            y = np.average(m._M_xt, axis=1, weights=m._sampl_d_x)
+            mat = m._M_xt
+        y = np.average(mat, axis=1, weights=m._sampl_d_x)
 
         col = plt.plot(x, y, label=n + 1)[0].get_color()
         if n == 0:
@@ -1008,11 +1013,6 @@ def comp_depth_prof(*args, **kwargs):
     else:
         plt.ylim(0, comp_max)
     plt.xlabel('x (nm)')
-    if comp == 'u':
-        plt.ylabel('u')
-    if comp == 'v':
-        plt.ylabel('v')
-    if comp == 'm':
-        plt.ylabel('m')
+    plt.ylabel(comp)
     plt.legend(loc='best')
     plt.show()
