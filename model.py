@@ -645,12 +645,13 @@ class ADRMDP(object):
 
             if var == 'depth':
                 if comp == 'u':
-                    for d, w in zip(self._l_depth_u, self._l_width_u):
-                        plt.axvspan(d * self._samp_len,
-                                    (d + w) * self._samp_len, color=col,
-                                    alpha=0.2)
+                    depth = self._l_depth_u
+                    width = self._l_width_u
                 if comp == 'v':
-                    for d, w in zip(self._l_depth_v, self._l_width_v):
+                    depth = self._l_depth_v
+                    width = self._l_width_v
+                if comp == 'u' or comp == 'v':
+                    for d, w in zip(depth, width):
                         plt.axvspan(d * self._samp_len,
                                     (d + w) * self._samp_len, color=col,
                                     alpha=0.2)
@@ -661,16 +662,15 @@ class ADRMDP(object):
                                  range(self._t_grid.shape[0])]) \
                     # t -> x (1)
                 if comp == 'u':
-                    for d, w in zip(self._l_depth_u, self._l_width_u):
-                        t_d = self._t_grid[np.argmax(depth >= d)]
-                        t_dw = self._t_grid[np.argmax(depth >= d + w)]
-
-                        plt.axvspan(t_d, t_dw, color=col, alpha=0.2)
+                    depth = self._l_depth_u
+                    width = self._l_width_u
                 if comp == 'v':
-                    for d, w in zip(self._l_depth_v, self._l_width_v):
+                    depth = self._l_depth_v
+                    width = self._l_width_v
+                if comp == 'u' or comp == 'v':
+                    for d, w in zip(depth, width):
                         t_d = self._t_grid[np.argmax(depth >= d)]
                         t_dw = self._t_grid[np.argmax(depth >= d + w)]
-
                         plt.axvspan(t_d, t_dw, color=col, alpha=0.2)
 
                 plt.xlabel('t (s)')
@@ -1001,11 +1001,13 @@ def comp_depth_prof(*args, **kwargs):
         col = plt.plot(x, y, label=n + 1)[0].get_color()
         if n == 0:
             if comp == 'u':
-                for d, w in zip(m._l_depth_u, m._l_width_u):
-                    plt.axvspan(d * m._samp_len, (d + w) * m._samp_len,
-                                color=col, alpha=0.2)
+                depth = m._l_depth_u
+                width = m._l_width_u
             if comp == 'v':
-                for d, w in zip(m._l_depth_v, m._l_width_v):
+                depth = m._l_depth_v
+                width = m._l_width_v
+            if comp == 'v' or comp == 'u':
+                for d, w in zip(depth, width):
                     plt.axvspan(d * m._samp_len, (d + w) * m._samp_len,
                                 color=col, alpha=0.2)
     if comp == 'm':
