@@ -420,7 +420,7 @@ class ADRMDP(object):
     def calc_model(self):
         '''Run calculations. Invoke if the ADRMDP instance was created with
         model_calc=False.'''
-        print 'calculating...',
+        print('calculating...', end='')
 
         U, V = self._get_ini_cond()
 
@@ -500,9 +500,9 @@ class ADRMDP(object):
             self._calc_r_terms(U, V, M)
 
             if len(self._t_grid) % 500 == 0:
-                print '%i%%' % (self._t_grid[-1]/self._T * 100),
+                print('%i%%' % (self._t_grid[-1]/self._T * 100), end='')
 
-        print 'done'
+        print('done')
     # =========================================================================
 
     def plot_vel(self, comps=['u']):
@@ -685,7 +685,7 @@ class ADRMDP(object):
     def calc_dp_prop(self, comp='u'):
         ''' Calculate delta-layer depth profile properties for the specified
         component (default 'u').'''
-        print 'comp:', comp
+        print('comp:', comp)
 
         x = self._t_grid * abs(self._a_t) * self._samp_len  # t -> x (nm)
         if comp == 'u':
@@ -700,13 +700,13 @@ class ADRMDP(object):
         y = np.average(mat, axis=1, weights=self._sampl_d_x)
 
         integral = scipy.integrate.simps(y, x=x)
-        print 'integral: %g nm' % integral
+        print('integral: %g nm' % integral)
 
         height = y[y.argmax()]
-        print 'height: %g' % height
+        print('height: %g' % height)
 
         peak_pos = x[y.argmax()]
-        print 'peak_pos: %g nm' % peak_pos
+        print('peak_pos: %g nm' % peak_pos)
 
         y_max = y[y.argmax()]
         n = y.shape[0]
@@ -719,7 +719,7 @@ class ADRMDP(object):
             if thL > y_max * 0.1587:
                 x1 = x[n - k - 1]
         e1684 = x2 - x1
-        print 'e1684: %g nm' % e1684
+        print('e1684: %g nm' % e1684)
 
         y_max = y[y.argmax()]
         n = y.shape[0]
@@ -733,7 +733,7 @@ class ADRMDP(object):
             if thL > y_max * 0.5:
                 x1 = x[n - k - 1]
         fwhm50 = x2 - x1
-        print 'fwhm50: %g nm' % fwhm50
+        print('fwhm50: %g nm' % fwhm50)
 
         y_max = y[y.argmax()]
         n = y.shape[0]
@@ -747,7 +747,7 @@ class ADRMDP(object):
             if thL > y_max * 0.6067:
                 x1 = x[n - k - 1]
         fwhm61 = x2 - x1
-        print 'fwhm61: %g nm' % fwhm61
+        print('fwhm61: %g nm' % fwhm61)
 
         y_max = y[y.argmax()]
         n = y.shape[0]
@@ -760,7 +760,7 @@ class ADRMDP(object):
             if thR > y_max * 0.1587:
                 x2 = x[k]
         e8416 = x2 - x1
-        print 'e8416: %g nm' % e8416
+        print('e8416: %g nm' % e8416)
 
         y_sum = y.sum()
         n = y.shape[0]
@@ -768,7 +768,7 @@ class ADRMDP(object):
         for k in range(n):
             xThSum += x[k] * y[k]
         mean = xThSum/y_sum
-        print 'mean: %g nm' % mean
+        print('mean: %g nm' % mean)
 
         y_integr = scipy.integrate.simps(y, x=x)
         n = y.shape[0]
@@ -778,7 +778,7 @@ class ADRMDP(object):
             if thIntegr >= 0.5 * y_integr:
                 median = x[k]
                 break
-        print 'median: %g nm' % median
+        print('median: %g nm' % median)
 
     def plot_interact_pres(self):
         '''Plot interactive presentation of the results of the model.
