@@ -420,7 +420,7 @@ class ADRMDP(object):
     def calc_model(self):
         '''Run calculations. Invoke if the ADRMDP instance was created with
         model_calc=False.'''
-        print('calculating...', end='')
+        print('calculating... ', end='')
 
         U, V = self._get_ini_cond()
 
@@ -500,7 +500,7 @@ class ADRMDP(object):
             self._calc_r_terms(U, V, M)
 
             if len(self._t_grid) % 500 == 0:
-                print('%i%%' % (self._t_grid[-1]/self._T * 100), end='')
+                print('%i%% ' % (self._t_grid[-1]/self._T * 100), end='')
 
         print('done')
     # =========================================================================
