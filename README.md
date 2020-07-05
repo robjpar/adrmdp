@@ -1,6 +1,6 @@
 # Advection-diffusion-reaction model for modeling of SIMS depth profiling
 
-Robert J. Paruch, 2016
+Robert J. Paruch, 2016, 2020
 
 ## Table of Contents
 
