@@ -106,8 +106,9 @@ class ADRMDP(object):
 
         Example
         -------
+        >>> from adrmdp.model import ADRMDP
         >>> m1 = ADRMDP()
-        calculating... . . . done
+        calculating... 49% 98% done
         >>> m1.plot_depth_prof()
         """
         samp_len = kwargs.get('samp_len', 20)  # (nm)
