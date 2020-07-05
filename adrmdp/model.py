@@ -2,7 +2,7 @@
 """
 Created on Thu Feb 18 19:06:40 2016
 
-@author: roobb
+@author: Robert J. Paruch
 """
 from __future__ import division
 import numpy as np
