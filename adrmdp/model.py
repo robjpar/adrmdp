@@ -1,24 +1,23 @@
 # -*- coding: utf-8 -*-
-"""
+'''
 Created on Thu Feb 18 19:06:40 2016
 
 @author: Robert J. Paruch
-"""
-from __future__ import division
+'''
 import numpy as np
 import scipy.integrate
 from matplotlib import cm
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, Cursor, CheckButtons
 import warnings
-warnings.filterwarnings("ignore", category=UserWarning, module="matplotlib")
+warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
 # UserWarning: This figure includes Axes that are not compatible with
 # tight_layout, so its results might be incorrect.
 
 
 class ADRMDP(object):
     def __init__(self, **kwargs):
-        """This is the Advection-Diffusion-Reaction Model for Depth Profiling.
+        '''This is the Advection-Diffusion-Reaction Model for Depth Profiling.
 
         kwargs
         ------
@@ -110,7 +109,7 @@ class ADRMDP(object):
         >>> m1 = ADRMDP()
         calculating... 49% 98% done
         >>> m1.plot_depth_prof()
-        """
+        '''
         samp_len = kwargs.get('samp_len', 20)  # (nm)
         n_x_steps = kwargs.get('n_x_steps', 500)
 
