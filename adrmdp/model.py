@@ -1069,5 +1069,6 @@ def comp_depth_prof(*args, **kwargs):
 
 # Testing
 if __name__ == '__main__':
-    m1 = ADRMDP(samp_len=10, n_x_steps=120)
+    m1 = ADRMDP()
     m1.plot_depth_prof()
+    m1.plot_interact_pres()
