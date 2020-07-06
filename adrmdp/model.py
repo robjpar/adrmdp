@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 '''
-Created on Thu Feb 18 19:06:40 2016
-
-@author: Robert J. Paruch
+:Author: Robert J. Paruch
+:Date: Thu Feb 18 19:06:40 2016
 '''
+
 import numpy as np
 import scipy.integrate
 from matplotlib import cm
@@ -16,90 +16,91 @@ warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
 
 
 class ADRMDP(object):
-    def __init__(self, **kwargs):
-        '''This is the Advection-Diffusion-Reaction Model for Depth Profiling.
+    '''The Advection-Diffusion-Reaction Model for Depth Profiling (ADRMDP).'''
 
+    def __init__(self, **kwargs):
+        '''
         kwargs
         ------
-        samp_len: float
-            Sample length (nm) (default 20)
-        n_x_steps: int
+        samp_len : float
+            Length of the sample (nm) (default 20)
+        n_x_steps : int
             Number of space steps (default 500)
-        time: float
+        time : float
             Real time requested (s) (default 4.5)
-        bound_cond: str
+        bound_cond : str
             Boundary condition 'dirichlet' | 'neumann' | 'robin'
             (default 'neumann')
-        alpha_u: list of floats
+        alpha_u : list of floats
             If bound_cond='dirichlet', this parameter denotes the constant
             concentrations at the surface and at the bottom for component u
             (default [0, 0])
-        alpha_v: list of floats
+        alpha_v : list of floats
             If bound_cond='dirichlet', this parameter denotes the constant
             concentrations at the surface and at the bottom for component v
             (default [0, 0])
-        interf_slope: float
+        interf_slope : float
             Slope of the interface sigmoid (1/nm) (default 20)
-        sampl_depth: str
+        sampl_depth : str
             Shape of the sampling depth depth dependence 'surf' | 'sigm'
             (default 'sigmoid')
-        sampl_d_ampl: float
+        sampl_d_ampl : float
             If sampl_depth='sigm', this parameter denotes the magnitude of the
             sampling depth sigmoid (n_at, n_mol) (default 1)
-        sampl_d_slope: float
+        sampl_d_slope : float
             If sampl_depth='sigm', this parameter denotes the slope of the
             sampling depth sigmoid (1/nm) (default 1.7)
-        sampl_d_infl: float
+        sampl_d_infl : float
             If sampl_depth='sigm', this parameter denotes the inflection point
             of the sampling depth sigmoid (nm) (default 2.2)
-        l_depth_u: list of floats
+        l_depth_u : list of floats
             Layers of component u (nm) (default [14])
-        l_width_u: list of floats
+        l_width_u : list of floats
             Widths of the layers of component u (nm) (default [1])
-        vel_u: float
+        vel_u : float
             Velocity for component u (nm/s) (default 9)
-        diff_ampl_u: float
+        diff_ampl_u : float
             Magnitude of the diffusivity sigmoid for component u (nm^2/s)
             (default 18)
-        diff_slope_u: float
+        diff_slope_u : float
             Slope of the diffusivity sigmoid for component u (1/nm)
             (default 0.7)
-        diff_x_infl_u: float
+        diff_x_infl_u : float
             Inflection point of the diffusivity sigmoid for component u (nm)
             (default 3.5)
-        diff_const_u: float
+        diff_const_u : float
             Constant component of the total diffusivity for component u
             (nm^2/s) (default 0)
-        l_depth_v: list of floats
+        l_depth_v : list of floats
             Layers of component v (nm) (default [])
-        l_width_v: list of floats
+        l_width_v : list of floats
             Widths of the layers of component v (nm) (default [])
-        vel_v: float
+        vel_v : float
             Velocity for component v (nm/s) (default vel_u)
-        diff_ampl_v: float
+        diff_ampl_v : float
             Magnitude of the diffusivity sigmoid for component v (nm^2/s)
             (default diff_ampl_u)
-        diff_slope_v: float
+        diff_slope_v : float
             Slope of the diffusivity sigmoid for component v (1/nm)
             (default diff_slope_u)
-        diff_x_infl_v: float
+        diff_x_infl_v : float
             Inflection point of the diffusivity sigmoid for component v (nm)
             (default diff_x_infl_u)
-        diff_const_v: float
+        diff_const_v : float
             Constant component of the total diffusivity for component v
             (nm^2/s) (default diff_const_u)
-        vel_m: float
+        vel_m : float
             Velocity for component m (nm/s) (default vel_u)
-        reac_type: int
+        reac_type : int
             Include reactions? If so, which type? (default False)
-        reac_const: list of floats
+        reac_const : list of floats
             Reaction constants k_1, k_2,... (1/s) (default [5])
-        reac_slope: float
+        reac_slope : float
             Slope of the reaction term sigmoid (1/nm) (default diff_slope_u)
-        reac_x_infl: float
+        reac_x_infl : float
             Inflection point of the reaction term sigmoid
             (default diff_x_infl_u)
-        model_calc: bool
+        model_calc : bool
             Perform calculations on instance creation? If False, the method
             calc_model() has to be invoked manually (default True)
 
@@ -110,6 +111,7 @@ class ADRMDP(object):
         calculating... 49% 98% done
         >>> m1.plot_depth_prof()
         '''
+
         samp_len = kwargs.get('samp_len', 20)  # (nm)
         n_x_steps = kwargs.get('n_x_steps', 500)
 
@@ -233,9 +235,12 @@ class ADRMDP(object):
 
         Example
         -------
-        >>> x = linspace(0, 10)
+        >>> import numpy as np
+        >>> from adrmdp.model import ADRMDP
+        >>> x = np.linspace(0, 10)
         >>> plot(x, ADRMDP.sigm_fun(x, 1, 1, 1))
         '''
+
         if deriv:
             return -ampl * slope * np.exp(slope * (x - x_infl)) / \
                 (np.exp(slope * (x - x_infl)) + 1)**2
@@ -244,11 +249,13 @@ class ADRMDP(object):
 
     def _get_sigm_fun(self, x_infl, slope, ampl=1, deriv=False):
         '''Get sigmoid function.'''
+
         return self.sigm_fun(self._x_grid, x_infl, slope, ampl, deriv)
     # =========================================================================
 
     def _get_ini_cond(self):
         '''Get initial condition.'''
+
         U = np.zeros(self._J)
         for x1, x2 in zip(self._l_depth_u, self._l_depth_u + self._l_width_u):
             x_one_fourth = (x2 - x1)/4
@@ -310,6 +317,7 @@ class ADRMDP(object):
 
     def _calc_matrices(self, U, V, M):
         '''Calculate matrices.'''
+
         u_surf = np.average(U, weights=self._sampl_d_x)
         v_surf = np.average(V, weights=self._sampl_d_x)
         m_surf = np.average(M, weights=self._sampl_d_x)
@@ -394,6 +402,7 @@ class ADRMDP(object):
 
     def _calc_r_terms(self, U, V, M):
         '''Calculate reaction terms.'''
+
         if self._reac_type is False:
             self._r_term_u = 0
             self._r_term_v = 0
@@ -418,8 +427,8 @@ class ADRMDP(object):
     # =========================================================================
 
     def calc_model(self):
-        '''Run calculations. Invoke if the ADRMDP instance was created with
-        model_calc=False.'''
+        '''Run calculations.'''
+
         print('calculating... ', end='', flush=True)
 
         U, V = self._get_ini_cond()
@@ -508,8 +517,12 @@ class ADRMDP(object):
     def plot_vel(self, comps=['u']):
         '''Plot velocities for specified componets.
 
-        comps=['u', 'v', 'm'] (default ['u'])
+        args
+        ----
+        comps : list of strings
+            e.g. ['u', 'v', 'm'] (default ['u'])
         '''
+        
         x_pos = []
         x_labs = []
         vels = []
@@ -530,6 +543,7 @@ class ADRMDP(object):
 
     def plot_sampl_d(self):
         '''Plot sampling depth sigmoid.'''
+        
         plt.plot(self._x_grid * self._samp_len, self._sampl_d_x)
         plt.xlabel('x (nm)')
         plt.ylabel('S(x) (n$_{at}$, n$_{mol}$)')
@@ -538,8 +552,12 @@ class ADRMDP(object):
     def plot_diff(self, comps=['u']):
         '''Plot total diffusivity for specified components.
 
-        comps=['u', 'v', 'm'] (default ['u'])
+        args
+        ----
+        comps : list of strings
+            e.g. ['u', 'v', 'm'] (default ['u'])
         '''
+        
         x = self._x_grid * self._samp_len
         for comp in comps:
             if comp == 'u':
@@ -554,6 +572,7 @@ class ADRMDP(object):
 
     def plot_reac(self):
         '''Plot the sigmoid of reaction terms.'''
+        
         plt.plot(self._x_grid * self._samp_len, self._r_term_x)
         plt.xlabel('x')
         plt.ylabel('s$_R$(x)')
@@ -562,8 +581,12 @@ class ADRMDP(object):
     def plot_conc(self, comp='u'):
         '''Plot concentration surface c(x, t) for the specified component.
 
-        comp='u' | 'v' | 'm' (default 'u')
+        args
+        ----
+        comp : str
+            'u' | 'v' | 'm' (default 'u')
         '''
+        
         x = self._x_grid * self._samp_len
         t = self._t_grid
         if comp == 'u':
@@ -593,10 +616,14 @@ class ADRMDP(object):
         '''Plot sections of the concentration surface c(x, t) for specified
         times.
 
-        comps=['u', 'v', 'm'] (default ['u'])
-
-        e.g. times=[0, 2, 5] (default [0])
+        args
+        ----
+        comps : list of strings
+            e.g. ['u', 'v', 'm'] (default ['u'])
+        times : list of integers
+            e.g [0, 2, 5] (default [0])
         '''
+        
         x = self._x_grid * self._samp_len
 
         for time in times:
@@ -618,12 +645,16 @@ class ADRMDP(object):
     def plot_depth_prof(self, comps=['u'], var='depth', comp_max=0.2):
         '''Plot depth profiles for specified components.
 
-        comps=['u', 'v', 'm'] (default ['u'])
-
-        var='depth' | 'time' (default 'depth')
-
-        e.g. comp_max=1.1 (default 0.2)
+        args
+        ----
+        comps : list of strings
+            e.g. ['u', 'v', 'm'] (default ['u'])
+        var : str
+            'depth' | 'time' (default 'depth')
+        comp_max : float
+            e.g. 1.1 (default 0.2)
         '''
+        
         if var == 'depth':
             x = np.array([i * self._dx * self._samp_len for
                           i in range(self._t_grid.shape[0])])  # t -> x (nm)
@@ -684,7 +715,14 @@ class ADRMDP(object):
 
     def calc_dp_prop(self, comp='u'):
         ''' Calculate delta-layer depth profile properties for the specified
-        component (default 'u').'''
+        component
+        
+        args
+        ----
+        comp : str
+            'u' | 'v' | 'm' (default 'u').
+        '''
+        
         print('comp:', comp)
 
         x = self._t_grid * abs(self._a_t) * self._samp_len  # t -> x (nm)
@@ -781,8 +819,8 @@ class ADRMDP(object):
         print('median: %g nm' % median)
 
     def plot_interact_pres(self):
-        '''Plot interactive presentation of the results of the model.
-        '''
+        '''Plot interactive presentation of the results of the model.'''
+        
         fig = plt.figure('ADRM interactive presentation', figsize=(10, 8))
         plt.subplots_adjust(left=0.07, bottom=0.3, right=0.95, top=0.95,
                             hspace=0.39)
@@ -896,13 +934,16 @@ class ADRMDP(object):
 def comp_vel(*args, **kwargs):
     '''Compare velocities.
 
-    e.g. args=m1, m2,...
+    args
+    ----
+    e.g. m1, m2,...
 
     kwargs
     ------
-    comp:
+    comp : str
         'u' | 'v' | 'm' (default 'u')
     '''
+    
     comp = kwargs.get('comp', 'u')
     x_pos = []
     vels = []
@@ -930,8 +971,11 @@ def comp_vel(*args, **kwargs):
 def comp_sampl_d(*args):
     '''Compare sampling depth sigmoids.
 
-    e.g. args=m1, m2,...
+    args
+    ----
+    e.g. m1, m2,...
     '''
+    
     for i, m in enumerate(args):
         x = m._x_grid * m._samp_len
         plt.plot(x, m._sampl_d_x, label=i + 1)
@@ -944,13 +988,16 @@ def comp_sampl_d(*args):
 def comp_diff(*args, **kwargs):
     '''Compare total diffusivities.
 
-    e.g. args=m1, m2,...
+    args
+    ----
+    e.g. m1, m2,...
 
     kwargs
     ------
-    comp:
+    comp : str
         'u' | 'v' | 'm' (default 'u')
     '''
+    
     comp = kwargs.get('comp', 'u')
     for i, m in enumerate(args):
         x = m._x_grid * m._samp_len
@@ -972,15 +1019,18 @@ def comp_diff(*args, **kwargs):
 def comp_depth_prof(*args, **kwargs):
     '''Compare depth profiles.
 
-    e.g. args=m1, m2,...
+    args
+    ----
+    e.g. m1, m2,...
 
     kwargs
     ------
-    comp:
+    comp : str
         'u' | 'v' | 'm' (default 'u')
-    comp_max:float
+    comp_max : float
         (default 0.2)
     '''
+    
     comp = kwargs.get('comp', 'u')
     comp_max = kwargs.get('comp_max', 0.2)
     for n, m in enumerate(args):
