@@ -420,7 +420,7 @@ class ADRMDP(object):
     def calc_model(self):
         '''Run calculations. Invoke if the ADRMDP instance was created with
         model_calc=False.'''
-        print('calculating... ', end='')
+        print('calculating... ', end='', flush=True)
 
         U, V = self._get_ini_cond()
 
@@ -500,7 +500,7 @@ class ADRMDP(object):
             self._calc_r_terms(U, V, M)
 
             if len(self._t_grid) % 500 == 0:
-                print('%i%% ' % (self._t_grid[-1]/self._T * 100), end='')
+                print('%i%% ' % (self._t_grid[-1]/self._T * 100), end='', flush=True)
 
         print('done')
     # =========================================================================
@@ -1018,3 +1018,9 @@ def comp_depth_prof(*args, **kwargs):
     plt.ylabel(comp)
     plt.legend(loc='best')
     plt.show()
+
+
+# Testing
+if __name__ == '__main__':
+    m1 = ADRMDP(samp_len=10, n_x_steps=120)
+    m1.plot_depth_prof()
