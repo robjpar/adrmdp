@@ -838,8 +838,8 @@ class ADRMDP(object):
         l2, = ax.plot(x, y, 'r', visible=False, lw=2)
 
         ax.plot(x, self._sampl_d_x, 'k--', lw=1.5, label='sampl_d')
-        l3, = ax.plot(x, self._d_term_x_u, 'b', lw=1, label='diff_u')
-        l4, = ax.plot(x, self._d_term_x_v, 'g', lw=1, label='diff_v')
+        l3, = ax.plot(x, self._d_term_x_u, 'b--', lw=1, label='diff_u')
+        l4, = ax.plot(x, self._d_term_x_v, 'g--', lw=1, label='diff_v')
         if self._reac_type is not False:
             ax.plot(x, self._r_term_x, 'c-.', lw=1, label='reac')
         ax.legend(loc='best')
@@ -870,7 +870,7 @@ class ADRMDP(object):
         l6.set_visible(False)
         l7.set_visible(False)
 
-        l8, = ax2.plot([0, 0], [0, 1.1], 'k--', lw=1.5)
+        l8, = ax2.plot([0, 0], [-0.05, 1.05], 'k--', lw=1.5)
 
         for d, w in zip(self._l_depth_u, self._l_width_u):
             plt.axvspan(d/abs(self._a_t.mean()),
@@ -881,7 +881,7 @@ class ADRMDP(object):
                         (d + w)/abs(self._a_t.mean()), color='green',
                         alpha=0.2)
 
-        axS = plt.axes([0.13, 0.2, 0.77, 0.03])
+        axS = plt.axes([0.09, 0.2, 0.85, 0.03])
         self._sT = Slider(axS, 'time (s)', 0, self._T, valinit=0)
 
         def update(val):
@@ -905,7 +905,7 @@ class ADRMDP(object):
         self._cursor2 = Cursor(ax2, useblit=True, linestyle='--',
                                linewidth=1)
 
-        axC = plt.axes([0.13, 0.012, 0.1, 0.15])
+        axC = plt.axes([0.09, 0.012, 0.128, 0.15])
         self._checkB = CheckButtons(axC, ('u', 'v', 'm'),
                                     (True, False, False))
 
