@@ -232,9 +232,10 @@ class ADRMDP(object):
         Example
         -------
         >>> import numpy as np
+        >>> import matplotlib.pyplot as plt
         >>> from adrmdp.model import ADRMDP
         >>> x = np.linspace(0, 10)
-        >>> plot(x, ADRMDP.sigm_fun(x, 1, 1, 1))
+        >>> plt.plot(x, ADRMDP.sigm_fun(x, 1, 1, 1))
         '''
 
         if deriv:
