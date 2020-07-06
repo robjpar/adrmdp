@@ -9,10 +9,6 @@ import scipy.integrate
 from matplotlib import cm
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, Cursor, CheckButtons
-import warnings
-warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
-# UserWarning: This figure includes Axes that are not compatible with
-# tight_layout, so its results might be incorrect.
 
 
 class ADRMDP(object):
