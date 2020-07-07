@@ -827,7 +827,6 @@ class ADRMDP(object):
         ax.set_xlabel('x (nm)')
         ax.set_ylabel('c')
         ax.set_title('Concentration vs. depth for given time')
-        ax.grid(True)
         plt.axis([0, self._samp_len, -0.05, 1.05])
 
         x = self._x_grid * self._samp_len
@@ -857,7 +856,6 @@ class ADRMDP(object):
         ax2.set_xlabel('t (s)')
         ax2.set_ylabel('c')
         ax2.set_title('Concentration vs. time at the surface')
-        ax2.grid(True)
         plt.axis([0, self._T, -0.05, 1.05])
 
         x = self._t_grid
