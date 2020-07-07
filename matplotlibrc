@@ -350,15 +350,18 @@ backend: Qt5Agg
 #axes.edgecolor     : black   ## axes edge color
 #axes.linewidth     : 0.8     ## edge linewidth
 #axes.grid          : False   ## display grid or not
+axes.grid          : True   ## display grid or not
 #axes.grid.axis     : both    ## which axis the grid should apply to
 #axes.grid.which    : major   ## gridlines at {major, minor, both} ticks
 #axes.titlelocation : center  ## alignment of the title: {left, right, center}
 #axes.titlesize     : large   ## fontsize of the axes title
+axes.titlesize     : x-large   ## fontsize of the axes title
 #axes.titleweight   : normal  ## font weight of title
 #axes.titlecolor    : auto    ## color of the axes title, auto falls back to text.color
                               ## as default value
 #axes.titlepad      : 6.0     ## pad between axes and title in points
 #axes.labelsize     : medium  ## fontsize of the x any y labels
+axes.labelsize     : large  ## fontsize of the x any y labels
 #axes.labelpad      : 4.0     ## space between label and axis
 #axes.labelweight   : normal  ## weight of the x and y labels
 #axes.labelcolor    : black
@@ -438,6 +441,7 @@ backend: Qt5Agg
 ## ***************************************************************************
 ## See https://matplotlib.org/api/axis_api.html#matplotlib.axis.Tick
 #xtick.top           : False   ## draw ticks on the top side
+xtick.top           : True   ## draw ticks on the top side
 #xtick.bottom        : True    ## draw ticks on the bottom side
 #xtick.labeltop      : False   ## draw label on the top
 #xtick.labelbottom   : True    ## draw label on the bottom
@@ -459,6 +463,7 @@ backend: Qt5Agg
 
 #ytick.left          : True    ## draw ticks on the left side
 #ytick.right         : False   ## draw ticks on the right side
+ytick.right         : True   ## draw ticks on the right side
 #ytick.labelleft     : True    ## draw tick labels on the left side
 #ytick.labelright    : False   ## draw tick labels on the right side
 #ytick.major.size    : 3.5     ## major tick size in points
@@ -485,6 +490,7 @@ backend: Qt5Agg
 #grid.linestyle : -       ## solid
 #grid.linewidth : 0.8     ## in points
 #grid.alpha     : 1.0     ## transparency, between 0.0 and 1.0
+grid.alpha     : 0.2     ## transparency, between 0.0 and 1.0
 
 
 ## ***************************************************************************
@@ -493,6 +499,7 @@ backend: Qt5Agg
 #legend.loc           : best
 #legend.frameon       : True     ## if True, draw the legend on a background patch
 #legend.framealpha    : 0.8      ## legend patch transparency
+legend.framealpha    : 1      ## legend patch transparency
 #legend.facecolor     : inherit  ## inherit from axes.facecolor; or color spec
 #legend.edgecolor     : 0.8      ## background patch boundary color
 #legend.fancybox      : True     ## if True, use a rounded box for the
@@ -502,6 +509,7 @@ backend: Qt5Agg
 #legend.scatterpoints : 1        ## number of scatter points
 #legend.markerscale   : 1.0      ## the relative size of legend markers vs. original
 #legend.fontsize      : medium
+legend.fontsize      : large
 #legend.title_fontsize : None    ## None sets to the same as the default axes.
 
 ## Dimensions as fraction of fontsize:
@@ -558,6 +566,7 @@ backend: Qt5Agg
 #image.aspect : equal            ## {equal, auto} or a number
 #image.interpolation  : antialiased  ## see help(imshow) for options
 #image.cmap   : viridis          ## A colormap name, gray etc...
+image.cmap   : jet          ## A colormap name, gray etc...
 #image.lut    : 256              ## the size of the colormap lookup table
 #image.origin : upper            ## {lower, upper}
 #image.resample  : True
