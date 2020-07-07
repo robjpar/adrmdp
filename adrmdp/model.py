@@ -506,7 +506,8 @@ class ADRMDP(object):
             self._calc_r_terms(U, V, M)
 
             if len(self._t_grid) % 500 == 0:
-                print('%i%% ' % (self._t_grid[-1]/self._T * 100), end='', flush=True)
+                print('%i%% ' %
+                      (self._t_grid[-1]/self._T * 100), end='', flush=True)
 
         print('done')
     # =========================================================================
@@ -519,7 +520,7 @@ class ADRMDP(object):
         comps : list of strings
             e.g. ['u', 'v', 'm'] (default ['u'])
         '''
-        
+
         x_pos = []
         x_labs = []
         vels = []
@@ -540,7 +541,7 @@ class ADRMDP(object):
 
     def plot_sampl_d(self):
         '''Plot sampling depth sigmoid.'''
-        
+
         plt.plot(self._x_grid * self._samp_len, self._sampl_d_x)
         plt.xlabel('x (nm)')
         plt.ylabel('S(x) (n$_{at}$, n$_{mol}$)')
@@ -554,7 +555,7 @@ class ADRMDP(object):
         comps : list of strings
             e.g. ['u', 'v', 'm'] (default ['u'])
         '''
-        
+
         x = self._x_grid * self._samp_len
         for comp in comps:
             if comp == 'u':
@@ -569,7 +570,7 @@ class ADRMDP(object):
 
     def plot_reac(self):
         '''Plot the sigmoid of reaction terms.'''
-        
+
         plt.plot(self._x_grid * self._samp_len, self._r_term_x)
         plt.xlabel('x')
         plt.ylabel('s$_R$(x)')
@@ -583,7 +584,7 @@ class ADRMDP(object):
         comp : str
             'u' | 'v' | 'm' (default 'u')
         '''
-        
+
         x = self._x_grid * self._samp_len
         t = self._t_grid
         if comp == 'u':
@@ -620,7 +621,7 @@ class ADRMDP(object):
         times : list of integers
             e.g [0, 2, 5] (default [0])
         '''
-        
+
         x = self._x_grid * self._samp_len
 
         for time in times:
@@ -651,7 +652,7 @@ class ADRMDP(object):
         comp_max : float
             e.g. 1.1 (default 0.2)
         '''
-        
+
         if var == 'depth':
             x = np.array([i * self._dx * self._samp_len for
                           i in range(self._t_grid.shape[0])])  # t -> x (nm)
@@ -687,7 +688,7 @@ class ADRMDP(object):
 
             if var == 'time':
                 depth = np.array([i * self._dx for i in
-                                 range(self._t_grid.shape[0])]) \
+                                  range(self._t_grid.shape[0])]) \
                     # t -> x (1)
                 if comp == 'u':
                     depth = self._l_depth_u
@@ -713,13 +714,13 @@ class ADRMDP(object):
     def calc_dp_prop(self, comp='u'):
         ''' Calculate delta-layer depth profile properties for the specified
         component
-        
+
         args
         ----
         comp : str
             'u' | 'v' | 'm' (default 'u').
         '''
-        
+
         print('comp:', comp)
 
         x = self._t_grid * abs(self._a_t) * self._samp_len  # t -> x (nm)
@@ -817,7 +818,7 @@ class ADRMDP(object):
 
     def plot_interact_pres(self):
         '''Plot interactive presentation of the results of the model.'''
-        
+
         fig = plt.figure('ADRM interactive presentation', figsize=(10, 8))
         plt.subplots_adjust(left=0.07, bottom=0.3, right=0.95, top=0.95,
                             hspace=0.39)
@@ -940,7 +941,7 @@ def comp_vel(*args, **kwargs):
     comp : str
         'u' | 'v' | 'm' (default 'u')
     '''
-    
+
     comp = kwargs.get('comp', 'u')
     x_pos = []
     vels = []
@@ -972,7 +973,7 @@ def comp_sampl_d(*args):
     ----
     e.g. m1, m2,...
     '''
-    
+
     for i, m in enumerate(args):
         x = m._x_grid * m._samp_len
         plt.plot(x, m._sampl_d_x, label=i + 1)
@@ -994,7 +995,7 @@ def comp_diff(*args, **kwargs):
     comp : str
         'u' | 'v' | 'm' (default 'u')
     '''
-    
+
     comp = kwargs.get('comp', 'u')
     for i, m in enumerate(args):
         x = m._x_grid * m._samp_len
@@ -1027,7 +1028,7 @@ def comp_depth_prof(*args, **kwargs):
     comp_max : float
         (default 0.2)
     '''
-    
+
     comp = kwargs.get('comp', 'u')
     comp_max = kwargs.get('comp_max', 0.2)
     for n, m in enumerate(args):
