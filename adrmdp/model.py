@@ -849,7 +849,7 @@ class ADRMDP(object):
                              color='blue', alpha=0.2)
         for d, w in zip(self._l_depth_v, self._l_width_v):
             p2 = plt.axvspan(d * self._samp_len, (d + w) * self._samp_len,
-                             color='green', alpha=0.2)
+                             color='green', alpha=0.2, visible=False)
 
         ax2 = fig.add_subplot(212)
         ax2.set_xlabel('t (s)')
@@ -939,10 +939,12 @@ class ADRMDP(object):
                 l0.set_visible(not l0.get_visible())
                 l3.set_visible(not l3.get_visible())
                 l5.set_visible(not l5.get_visible())
+                p1.set_visible(not p1.get_visible())
             elif label == 'v':
                 l1.set_visible(not l1.get_visible())
                 l4.set_visible(not l4.get_visible())
                 l6.set_visible(not l6.get_visible())
+                p2.set_visible(not p2.get_visible())
             elif label == 'm':
                 l2.set_visible(not l2.get_visible())
                 l7.set_visible(not l7.get_visible())
