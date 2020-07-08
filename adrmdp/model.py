@@ -687,9 +687,8 @@ class ADRMDP(object):
                 plt.xlabel('x (nm)')
 
             if var == 'time':
-                depth = np.array([i * self._dx for i in
-                                  range(self._t_grid.shape[0])]) \
-                    # t -> x (1)
+                depth_t = np.array([i * self._dx for i in
+                                   range(self._t_grid.shape[0])]) # t -> x (1)
                 if comp == 'u':
                     depth = self._l_depth_u
                     width = self._l_width_u
@@ -698,8 +697,8 @@ class ADRMDP(object):
                     width = self._l_width_v
                 if comp == 'u' or comp == 'v':
                     for d, w in zip(depth, width):
-                        t_d = self._t_grid[np.argmax(depth >= d)]
-                        t_dw = self._t_grid[np.argmax(depth >= d + w)]
+                        t_d = self._t_grid[np.argmax(depth_t >= d)]
+                        t_dw = self._t_grid[np.argmax(depth_t >= d + w)]
                         plt.axvspan(t_d, t_dw, color=col, alpha=0.2)
 
                 plt.xlabel('t (s)')
