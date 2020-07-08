@@ -845,11 +845,11 @@ class ADRMDP(object):
         l4.set_visible(False)
 
         for d, w in zip(self._l_depth_u, self._l_width_u):
-            plt.axvspan(d * self._samp_len, (d + w) * self._samp_len,
-                        color='blue', alpha=0.2)
+            p1 = plt.axvspan(d * self._samp_len, (d + w) * self._samp_len,
+                             color='blue', alpha=0.2)
         for d, w in zip(self._l_depth_v, self._l_width_v):
-            plt.axvspan(d * self._samp_len, (d + w) * self._samp_len,
-                        color='green', alpha=0.2)
+            p2 = plt.axvspan(d * self._samp_len, (d + w) * self._samp_len,
+                             color='green', alpha=0.2)
 
         ax2 = fig.add_subplot(212)
         ax2.set_xlabel('t (s)')
@@ -882,6 +882,27 @@ class ADRMDP(object):
         axS = plt.axes([0.09, 0.2, 0.85, 0.03])
         self._sT = Slider(axS, 'time (s)', 0, self._T, valinit=0)
 
+        def set_xvalues(polygon, comp, time):
+            if comp == 'u':
+                depth = self._l_depth_u
+                width = self._l_width_u
+            if comp == 'v':
+                depth = self._l_depth_v
+                width = self._l_width_v
+            coord = polygon.get_xy()
+            for d, w in zip(depth, width):
+                coord[0, 0] = (d + self._a_t.mean() * time) * \
+                               self._samp_len  # x0
+                coord[1, 0] = (d + self._a_t.mean() * time) * \
+                               self._samp_len  # x0
+                coord[2, 0] = (d + w + self._a_t.mean() *
+                               time) * self._samp_len  # x1
+                coord[3, 0] = (d + w + self._a_t.mean() *
+                               time) * self._samp_len  # x1
+                coord[4, 0] = (d + self._a_t.mean() * time) * \
+                               self._samp_len  # x0
+            polygon.set_xy(coord)
+
         def update(val):
             time = self._sT.val
 
@@ -894,6 +915,12 @@ class ADRMDP(object):
             l2.set_ydata(y)
 
             l8.set_xdata([time, time])
+
+            try:
+                set_xvalues(p1, 'u', time)
+                set_xvalues(p2, 'v', time)
+            except NameError:
+                pass
 
             plt.draw()
         self._sT.on_changed(update)
